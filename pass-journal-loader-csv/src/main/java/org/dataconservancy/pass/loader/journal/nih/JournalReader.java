@@ -16,12 +16,16 @@
 
 package org.dataconservancy.pass.loader.journal.nih;
 
+import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.stream.Stream;
+
+import org.dataconservancy.pass.model.Journal;
 
 /**
  * @author apb@jhu.edu
  */
 public interface JournalReader {
 
-    public Stream<JournalRecord> readJournals();
+    public Stream<Journal> readJournals(InputStream source, Charset charset);
 }

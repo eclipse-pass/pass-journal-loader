@@ -34,14 +34,14 @@ import org.slf4j.LoggerFactory;
 /**
  * @author apb@jhu.edu
  */
-public class CsvReader {
+public class NihTypeAReader {
 
-    static final Logger LOG = LoggerFactory.getLogger(CsvReader.class);
+    static final Logger LOG = LoggerFactory.getLogger(NihTypeAReader.class);
 
     public static Stream<JournalRecord> readJournals(Reader csv) throws IOException {
 
         return stream(CSVFormat.RFC4180.parse(csv).spliterator(), false)
-                .map(CsvReader::toJournal)
+                .map(NihTypeAReader::toJournal)
                 .filter(Objects::nonNull);
     }
 

@@ -17,7 +17,7 @@
 package org.dataconservancy.pass.loader.journal.nih;
 
 import static org.dataconservancy.pass.client.util.ConfigUtil.getSystemProperty;
-import static org.dataconservancy.pass.loader.journal.nih.CsvReader.readJournals;
+import static org.dataconservancy.pass.loader.journal.nih.NihTypeAReader.readJournals;
 
 import java.io.FileReader;
 import java.io.InputStreamReader;

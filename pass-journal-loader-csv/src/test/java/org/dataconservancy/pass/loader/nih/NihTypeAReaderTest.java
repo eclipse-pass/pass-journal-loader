@@ -26,7 +26,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.dataconservancy.pass.loader.journal.nih.CsvReader;
+import org.dataconservancy.pass.loader.journal.nih.NihTypeAReader;
 import org.dataconservancy.pass.loader.journal.nih.JournalRecord;
 
 import org.junit.Test;
@@ -34,13 +34,13 @@ import org.junit.Test;
 /**
  * @author apb@jhu.edu
  */
-public class CsvReaderTest {
+public class NihTypeAReaderTest {
 
     @Test
     public void fileParseTest() throws Exception {
         try (final InputStream in = this.getClass().getResourceAsStream("/data.csv")) {
 
-            final List<JournalRecord> records = CsvReader.readJournals(new InputStreamReader(in, UTF_8)).collect(
+            final List<JournalRecord> records = NihTypeAReader.readJournals(new InputStreamReader(in, UTF_8)).collect(
                     Collectors
                             .toList());
 
