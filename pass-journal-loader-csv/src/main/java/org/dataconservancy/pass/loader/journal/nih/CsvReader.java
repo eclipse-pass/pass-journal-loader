@@ -47,6 +47,8 @@ public class CsvReader {
 
     static JournalRecord toJournal(final CSVRecord record) {
 
+        LOG.debug("Parsing CSV record..");
+
         final Journal j = new Journal();
 
         try {

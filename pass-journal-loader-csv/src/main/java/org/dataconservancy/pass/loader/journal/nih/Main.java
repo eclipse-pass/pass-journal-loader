@@ -32,6 +32,8 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.DefaultRedirectStrategy;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Main method for csv loader executable.
@@ -40,6 +42,8 @@ import org.apache.http.impl.client.HttpClientBuilder;
  */
 public class Main {
 
+    static final Logger LOG = LoggerFactory.getLogger(Main.class);
+
     private static final String DEFAULT_JOURNAL_LIST_URL =
             "http://www.ncbi.nlm.nih.gov/pmc/front-page/NIH_PA_journal_list.csv";
 
@@ -47,7 +51,10 @@ public class Main {
 
         final LoaderEngine loader = new LoaderEngine(new FedoraPassClient());
 
+        LogUtil.adjustLogLevels();
+
         loader.load(readJournals(getReader()));
+        LOG.info("done!");
 
     }
 
@@ -56,6 +63,7 @@ public class Main {
 
         final String fileName = getSystemProperty("file", null);
         if (fileName != null) {
+            LOG.info("Reading from file " + fileName);
             return new FileReader(fileName);
         }
 
@@ -63,6 +71,7 @@ public class Main {
                 new DefaultRedirectStrategy()).build();
 
         final String url = getSystemProperty("url", DEFAULT_JOURNAL_LIST_URL);
+        LOG.info("Reading from URL " + url);
         final HttpGet get = new HttpGet(url);
 
         final CloseableHttpResponse response = client.execute(get);

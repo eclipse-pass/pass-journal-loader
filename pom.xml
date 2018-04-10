@@ -13,8 +13,14 @@
   <properties>
     <commons.csv.version>1.5</commons.csv.version>
     <junit.version>4.12</junit.version>
+    <logback.version>1.2.3</logback.version>
     <pass.java.client.version>0.0.1-SNAPSHOT</pass.java.client.version>
+
+    <build-helper-maven-plugin.version>3.0.0</build-helper-maven-plugin.version>
+    <docker-maven-plugin.version>0.24.0</docker-maven-plugin.version>
     <maven-compiler-plugin.version>3.6.1</maven-compiler-plugin.version>
+    <maven-dependency-plugin.version>3.0.2</maven-dependency-plugin.version>
+    <maven-failsafe-plugin.version>2.21.0</maven-failsafe-plugin.version>
     <maven-shade-plugin.version>3.1.1</maven-shade-plugin.version>
   </properties>
 
@@ -29,7 +35,33 @@
             <target>1.8</target>
           </configuration>
         </plugin>
+
+        <plugin>
+          <groupId>io.fabric8</groupId>
+          <artifactId>docker-maven-plugin</artifactId>
+          <version>${docker-maven-plugin.version}</version>
+        </plugin>
+
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>build-helper-maven-plugin</artifactId>
+          <version>${build-helper-maven-plugin.version}</version>
+        </plugin>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-dependency-plugin</artifactId>
+          <version>${maven-dependency-plugin.version}</version>
+        </plugin>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-failsafe-plugin</artifactId>
+          <version>${maven-failsafe-plugin.version}</version>
+        </plugin>
+
       </plugins>
+
     </pluginManagement>
   </build>
 
@@ -51,6 +83,13 @@
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>
         <version>${junit.version}</version>
+        <scope>test</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>ch.qos.logback</groupId>
+        <artifactId>logback-classic</artifactId>
+        <version>${logback.version}</version>
         <scope>test</scope>
       </dependency>
 
