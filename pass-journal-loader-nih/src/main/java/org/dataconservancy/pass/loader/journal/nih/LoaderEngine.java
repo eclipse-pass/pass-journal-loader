@@ -18,6 +18,9 @@ package org.dataconservancy.pass.loader.journal.nih;
 
 import java.net.URI;
 import java.util.Collection;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 import org.dataconservancy.pass.client.PassClient;
@@ -35,7 +38,9 @@ import org.slf4j.LoggerFactory;
  *
  * @author apb@jhu.edu
  */
-public class LoaderEngine {
+public class LoaderEngine implements AutoCloseable {
+
+    Executor exe = r -> r.run();
 
     private final PassClient client;
 
@@ -43,21 +48,54 @@ public class LoaderEngine {
 
     Logger LOG = LoggerFactory.getLogger(LoaderEngine.class);
 
+    private boolean dryRun = false;
+
+    private final AtomicInteger numCreated = new AtomicInteger(0);
+
+    private final AtomicInteger numUpdated = new AtomicInteger(0);
+
+    private final AtomicInteger numSkipped = new AtomicInteger(0);
+
     public LoaderEngine(PassClient client, JournalFinder finder) {
         this.client = client;
         this.finder = finder;
     }
 
+    int numThreads = 1;
+
+    public void setNumThreads(int threads) {
+        exe = Executors.newFixedThreadPool(threads);
+    }
+
     public void load(Stream<Journal> journals, boolean doUpdates) {
+
         journals
                 .forEach(j -> load(j, doUpdates));
+
+    }
+
+    public void setDryRun(boolean dryRun) {
+        this.dryRun = dryRun;
+    }
+
+    @Override
+    public void close() {
+        if (dryRun) {
+            LOG.info("Dry run: would have created {} new journals", numCreated);
+            LOG.info("Dry run: would have updated {} journals", numUpdated);
+            LOG.info("Dry run: Skipped {} journals due to lack of ISSN", numSkipped);
+        } else {
+            LOG.info("Created {} new journals", numCreated);
+            LOG.info("Updated {} journals", numUpdated);
+            LOG.info("Skipped {} journals due to lack of ISSN", numSkipped);
+        }
     }
 
     private void load(Journal j, boolean doUpdates) {
-        final URI uri;
 
         if (j.getIssns().isEmpty()) {
-            LOG.warn("Journal has no ISSNs: {}", j.getName());
+            LOG.debug("Journal has no ISSNs: {}", j.getName());
+            numSkipped.incrementAndGet();
             return;
         }
 
@@ -66,10 +104,18 @@ public class LoaderEngine {
         if (found == null) {
             // If journal not found, deposit as new
             try {
-                uri = client.createResource(j);
-                j.setId(uri);
-                finder.add(j);
-                LOG.debug("Loaded journal {} at {}", j.getNlmta(), uri);
+                if (!dryRun) {
+                    exe.execute(() -> {
+                        final URI uri = client.createResource(j);
+
+                        j.setId(uri);
+                        finder.add(j);
+                        LOG.debug("Loaded journal {} at {}", j.getName(), uri);
+                        numCreated.incrementAndGet();
+                    });
+                } else {
+                    numCreated.incrementAndGet();
+                }
             } catch (final Exception e) {
                 LOG.warn("Could not load journal " + j.getName(), e);
             }
@@ -79,7 +125,15 @@ public class LoaderEngine {
             try {
                 final Journal toUpdate = client.readResource(found.getId(), Journal.class);
                 toUpdate.setPmcParticipation(j.getPmcParticipation());
-                client.updateResource(toUpdate);
+                if (!dryRun) {
+                    exe.execute(() -> {
+                        client.updateResource(toUpdate);
+                        numUpdated.incrementAndGet();
+                        LOG.debug("Updated PMC participation of {} at {}", j.getName(), j.getId());
+                    });
+                } else {
+                    numUpdated.incrementAndGet();
+                }
             } catch (final Exception e) {
                 LOG.warn("Could not update journal");
             }
@@ -91,6 +145,8 @@ public class LoaderEngine {
             final Journal j = finder.byIssn(issn);
             if (j != null) {
                 return j;
+            } else {
+                LOG.debug("No hits for issn {}", issn);
             }
         }
 

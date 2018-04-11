@@ -54,7 +54,7 @@ public class BatchJournalFinder implements JournalFinder {
 
     Set<String> typeARefs = new HashSet<>();
 
-    private static final String ISSNS = "http://example.org/pass/issns";
+    private static final String ISSNS = "http://example.org/pass/issn";
 
     private static final String PMC_PARTICIPATION = "http://example.org/pass/pmcParticipation";
 
@@ -93,7 +93,7 @@ public class BatchJournalFinder implements JournalFinder {
         final HttpGet get = new HttpGet(journalContainer);
         get.setHeader("Accept", "application/n-triples");
         get.setHeader("Prefer",
-                "return=representation; omit=\"http://fedora.info/definitions/v4/repository#ServerManaged\"");
+                "return=representation; include=\"http://fedora.info/definitions/v4/repository#EmbedResources\"; omit=\"http://fedora.info/definitions/v4/repository#ServerManaged\"");
 
         try (CloseableHttpResponse response = getHttpClient().execute(get)) {
             load(response.getEntity().getContent());
@@ -104,7 +104,7 @@ public class BatchJournalFinder implements JournalFinder {
     }
 
     @Override
-    public Journal byIssn(String issn) {
+    public synchronized Journal byIssn(String issn) {
         if (issnMap.containsKey(issn)) {
             final Journal j = new Journal();
             j.setId(URI.create(issnMap.get(issn)));
@@ -149,8 +149,9 @@ public class BatchJournalFinder implements JournalFinder {
     }
 
     @Override
-    public void add(Journal j) {
+    public synchronized void add(Journal j) {
         for (final String issn : j.getIssns()) {
+            LOG.debug("Adding issn " + issn);
             final String uri = issnMap.putIfAbsent(issn, j.getId().toString());
 
             if (uri != null && !uri.equals(j.getId().toString())) {

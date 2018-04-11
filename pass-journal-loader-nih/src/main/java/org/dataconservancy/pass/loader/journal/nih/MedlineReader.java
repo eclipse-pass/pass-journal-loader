@@ -38,13 +38,8 @@ public class MedlineReader implements JournalReader {
 
     static final String TITLE_FIELD = "JournalTitle";
 
-    static final String ISSN_PRINT_FIELD = "ISSN (Print)";
+    static final String ISSN_FIELD = "ISSN";
 
-    static final String ISSN_ONLINE_FIELD = "ISSN (Online)";
-
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Stream<Journal> readJournals(InputStream source, Charset charset) {
 
@@ -82,7 +77,7 @@ public class MedlineReader implements JournalReader {
                         .readLine()) {
                     if (line.startsWith(TITLE_FIELD)) {
                         j.setName(extract(line));
-                    } else if (line.startsWith(ISSN_ONLINE_FIELD) || line.startsWith(ISSN_PRINT_FIELD)) {
+                    } else if (line.startsWith(ISSN_FIELD)) {
                         final String issn = extract(line);
                         if (issn.length() > 0) {
                             j.getIssns().add(issn);

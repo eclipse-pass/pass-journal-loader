@@ -29,7 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Main method for csv loader executable.
+ * Main method for nih loader executable.
  *
  * @author apb@jhu.edu
  */
@@ -37,34 +37,35 @@ public class Main {
 
     static final Logger LOG = LoggerFactory.getLogger(Main.class);
 
-    private static final String DEFAULT_JOURNAL_LIST_URL =
-            "http://www.ncbi.nlm.nih.gov/pmc/front-page/NIH_PA_journal_list.csv";
-
     public static void main(String[] args) throws Exception {
-
-        final JournalFinder finder = new BatchJournalFinder(FedoraConfig.getBaseUrl() + "journals");
-        final LoaderEngine loader = new LoaderEngine(new FedoraPassClient(), finder);
 
         LogUtil.adjustLogLevels();
 
-        final String pmcFile = getSystemProperty("pmc", null);
-        final String medlineFile = getSystemProperty("medline", null);
+        final JournalFinder finder = new BatchJournalFinder(FedoraConfig.getBaseUrl() + "journals");
 
-        if (pmcFile != null) {
-            final NihTypeAReader reader = new NihTypeAReader();
-            try (InputStream file = new FileInputStream(pmcFile)) {
-                loader.load(reader.readJournals(file, UTF_8), reader.hasPmcParticipation());
+        try (final LoaderEngine loader = new LoaderEngine(new FedoraPassClient(), finder)) {
+
+            if (getSystemProperty("dryRun", null) != null) {
+                loader.setDryRun(true);
+            }
+
+            final String pmcFile = getSystemProperty("pmc", null);
+            final String medlineFile = getSystemProperty("medline", null);
+
+            if (pmcFile != null) {
+                final NihTypeAReader reader = new NihTypeAReader();
+                try (InputStream file = new FileInputStream(pmcFile)) {
+                    loader.load(reader.readJournals(file, UTF_8), reader.hasPmcParticipation());
+                }
+            }
+
+            if (medlineFile != null) {
+                final MedlineReader reader = new MedlineReader();
+                try (InputStream file = new FileInputStream(medlineFile)) {
+                    loader.load(reader.readJournals(file, UTF_8), reader.hasPmcParticipation());
+                }
             }
         }
-
-        if (medlineFile != null) {
-            final MedlineReader reader = new MedlineReader();
-            try (InputStream file = new FileInputStream(medlineFile)) {
-                loader.load(reader.readJournals(file, UTF_8), reader.hasPmcParticipation());
-            }
-        }
-
         LOG.info("done!");
-
     }
 }

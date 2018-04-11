@@ -24,10 +24,19 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URI;
+import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
+import org.dataconservancy.pass.client.PassClient;
 import org.dataconservancy.pass.client.fedora.FedoraConfig;
+import org.dataconservancy.pass.client.fedora.FedoraPassClient;
+import org.dataconservancy.pass.model.Journal;
+import org.dataconservancy.pass.model.PmcParticipation;
 
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
@@ -46,6 +55,8 @@ import org.slf4j.LoggerFactory;
  */
 public class DepositIT {
 
+    final PassClient client = new FedoraPassClient();
+
     Logger LOG = LoggerFactory.getLogger(DepositIT.class);
 
     Process load;
@@ -56,40 +67,79 @@ public class DepositIT {
     @Test
     public void loadFromFileTest() throws Exception {
 
-        final String loc = DepositIT.class.getResource("/data.csv").getPath();
+        // First, load all three journals using medline data
+        load = jar(new File(System.getProperty("nih.loader.jar").toString()))
+                .logOutput(LoggerFactory.getLogger("nih-loader"))
+                .withEnv("medline", DepositIT.class.getResource("/medline.txt").getPath())
+                .withEnv("pass.fedora.baseurl", PASS_BASEURL)
+                .withEnv("LOG.org.dataconservancy.pass", "DEBUG")
+                .start();
 
+        wait(load);
 
-        load = jar(new File(System.getProperty("nih.loader.jar",
-                "../pass-journal-loader-csv/target/pass-journal-loader-nih-0.0.1-SNAPSHOT-exe.jar").toString()))
-                        .logOutput(LoggerFactory.getLogger("csv-loader"))
-                        .withEnv("file", loc)
-                        .withEnv("pass.fedora.baseurl", PASS_BASEURL)
-                        .withEnv("LOG.org.dataconservancy.pass", "DEBUG")
-                        .start();
+        // We expect three journals, but no PMC A journals
+        assertEquals(3, listJournals().size());
+        assertEquals(0, typeA(listJournals()).size());
 
-        for (int i = 0; i < 30 && load.isAlive(); i++) {
-            System.out.println(".");
-            Thread.sleep(1000);
-        }
+        load = jar(new File(System.getProperty("nih.loader.jar").toString()))
+                .logOutput(LoggerFactory.getLogger("nih-loader"))
+                .withEnv("pmc", DepositIT.class.getResource("/pmc-1.csv").getPath())
+                .withEnv("pass.fedora.baseurl", PASS_BASEURL)
+                .withEnv("LOG.org.dataconservancy.pass", "DEBUG")
+                .start();
 
+        wait(load);
+
+        // We still expect three journals in the repository, but now two are PMC A
+        assertEquals(3, listJournals().size());
+        assertEquals(2, typeA(listJournals()).size());
+
+        load = jar(new File(System.getProperty("nih.loader.jar").toString()))
+                .logOutput(LoggerFactory.getLogger("nih-loader"))
+                .withEnv("pmc", DepositIT.class.getResource("/pmc-2.csv").getPath())
+                .withEnv("pass.fedora.baseurl", PASS_BASEURL)
+                .withEnv("LOG.org.dataconservancy.pass", "DEBUG")
+                .start();
+
+        // The last dataset removed a type A journal, so now we expect only one
+        assertEquals(3, listJournals().size());
+        assertEquals(2, typeA(listJournals()).size());
+    }
+
+    private List<PmcParticipation> typeA(Collection<URI> uris) {
+        return uris.stream()
+                .map(uri -> client.readResource(uri, Journal.class))
+                .map(Journal::getPmcParticipation)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+    }
+
+    private Set<URI> listJournals() throws Exception {
         final HttpGet get = new HttpGet(PASS_BASEURL + "journals");
         get.setHeader("Accept", "application/n-triples");
         get.setHeader("Prefer",
                 "return=representation; include=\"http://www.w3.org/ns/ldp#PreferContainment\"; omit=\"http://fedora.info/definitions/v4/repository#ServerManaged\"");
 
-        final Set<String> URIs = new HashSet<>();
+        final Set<URI> URIs = new HashSet<>();
 
         try (CloseableHttpResponse response = getHttpClient().execute(get)) {
             try (InputStream in = response.getEntity().getContent()) {
                 final BufferedReader reader = new BufferedReader(new InputStreamReader(in, UTF_8));
                 for (String line = reader.readLine(); line != null; line = reader.readLine()) {
                     final String[] spo = line.split("\\s+");
-                    URIs.add(ntripleUri(spo[2]));
+                    URIs.add(URI.create(ntripleUri(spo[2])));
                 }
             }
         }
 
-        assertEquals(1, URIs.size());
+        return URIs;
+    }
+
+    private void wait(Process toWaitFor) throws InterruptedException {
+        for (int i = 0; i < 30 && load.isAlive(); i++) {
+            System.out.println(".");
+            Thread.sleep(1000);
+        }
     }
 
     static String ntripleUri(String token) {

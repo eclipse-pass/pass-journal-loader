@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory;
  * <p>
  * See also: http://www.ncbi.nlm.nih.gov/pmc/front-page/NIH_PA_journal_list.csv
  * </p>
- * 
+ *
  * @author apb@jhu.edu
  */
 public class NihTypeAReader implements JournalReader {

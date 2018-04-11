@@ -1,0 +1,25 @@
+--------------------------------------------------------
+JrId: 1
+JournalTitle: Journal 1
+MedAbbr: 1jr
+ISSN (Print): 000-001
+ISSN (Online): 000-001X
+IsoAbbr: 1jr
+NlmId: abc1231
+--------------------------------------------------------
+JrId: 2
+JournalTitle: Journal 2
+MedAbbr: 2jr
+ISSN (Print):  
+ISSN (Online): 000-002
+IsoAbbr: 2jr
+NlmId: abc1232
+--------------------------------------------------------
+JrId: 3
+JournalTitle: Third Journal
+MedAbbr: 3jr
+ISSN (Print): 000-003
+ISSN (Online): 000-004
+IsoAbbr: 3jr
+NlmId: abc1232
+--------------------------------------------------------
