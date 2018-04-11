@@ -41,8 +41,6 @@ public class LoaderEngine {
 
     private final JournalFinder finder;
 
-    private boolean doUpdates;
-
     Logger LOG = LoggerFactory.getLogger(LoaderEngine.class);
 
     public LoaderEngine(PassClient client, JournalFinder finder) {
@@ -52,10 +50,10 @@ public class LoaderEngine {
 
     public void load(Stream<Journal> journals, boolean doUpdates) {
         journals
-                .forEach(this::load);
+                .forEach(j -> load(j, doUpdates));
     }
 
-    private void load(Journal j) {
+    private void load(Journal j, boolean doUpdates) {
         final URI uri;
 
         if (j.getIssns().isEmpty()) {
