@@ -6,7 +6,7 @@
   <version>0.0.1-SNAPSHOT</version>
   <packaging>pom</packaging>
   <modules>
-    <module>pass-journal-loader-csv</module>
+    <module>pass-journal-loader-nih</module>
     <module>pass-journal-loader-integration</module>
   </modules>
 

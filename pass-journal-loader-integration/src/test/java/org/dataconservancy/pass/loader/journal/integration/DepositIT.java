@@ -58,10 +58,9 @@ public class DepositIT {
 
         final String loc = DepositIT.class.getResource("/data.csv").getPath();
 
-        System.out.println("csv loader jar is: " + System.getProperty("csv.loader.jar"));
 
-        load = jar(new File(System.getProperty("csv.loader.jar",
-                "../pass-journal-loader-csv/target/pass-journal-loader-csv-0.0.1-SNAPSHOT-exe.jar").toString()))
+        load = jar(new File(System.getProperty("nih.loader.jar",
+                "../pass-journal-loader-csv/target/pass-journal-loader-nih-0.0.1-SNAPSHOT-exe.jar").toString()))
                         .logOutput(LoggerFactory.getLogger("csv-loader"))
                         .withEnv("file", loc)
                         .withEnv("pass.fedora.baseurl", PASS_BASEURL)

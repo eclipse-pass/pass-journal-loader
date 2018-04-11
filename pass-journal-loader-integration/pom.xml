@@ -72,7 +72,7 @@
         </executions>
         <configuration>
           <systemPropertyVariables>
-            <csv.loader.jar>${org.dataconservancy.pass:pass-journal-loader-csv:jar:exe}</csv.loader.jar>
+            <nih.loader.jar>${org.dataconservancy.pass:pass-journal-loader-nih:jar:exe}</nih.loader.jar>
             <pass.fedora.baseurl>http://${FCREPO_HOST}:${FCREPO_PORT}/fcrepo/rest/</pass.fedora.baseurl>
           </systemPropertyVariables>
           <configuration>
@@ -173,7 +173,7 @@
 
     <dependency>
       <groupId>org.dataconservancy.pass</groupId>
-      <artifactId>pass-journal-loader-csv</artifactId>
+      <artifactId>pass-journal-loader-nih</artifactId>
       <version>${project.version}</version>
       <classifier>exe</classifier>
     </dependency>

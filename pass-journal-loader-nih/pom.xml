@@ -6,7 +6,7 @@
     <artifactId>pass-journal-loader</artifactId>
     <version>0.0.1-SNAPSHOT</version>
   </parent>
-  <artifactId>pass-journal-loader-csv</artifactId>
+  <artifactId>pass-journal-loader-nih</artifactId>
 
   <build>
     <plugins>
