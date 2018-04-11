@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.dataconservancy.pass.loader.nih;
+package org.dataconservancy.pass.loader.journal.nih;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;

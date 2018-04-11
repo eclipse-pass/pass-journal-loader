@@ -16,22 +16,15 @@
 
 package org.dataconservancy.pass.loader.journal.nih;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.dataconservancy.pass.client.util.ConfigUtil.getSystemProperty;
-import static org.dataconservancy.pass.loader.journal.nih.NihTypeAReader.readJournals;
 
-import java.io.FileReader;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.nio.charset.StandardCharsets;
+import java.io.FileInputStream;
+import java.io.InputStream;
 
+import org.dataconservancy.pass.client.fedora.FedoraConfig;
 import org.dataconservancy.pass.client.fedora.FedoraPassClient;
 
-import org.apache.http.HttpStatus;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.DefaultRedirectStrategy;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,37 +42,29 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
 
-        final LoaderEngine loader = new LoaderEngine(new FedoraPassClient());
+        final JournalFinder finder = new BatchJournalFinder(FedoraConfig.getBaseUrl() + "journals");
+        final LoaderEngine loader = new LoaderEngine(new FedoraPassClient(), finder);
 
         LogUtil.adjustLogLevels();
 
-        loader.load(readJournals(getReader()));
+        final String pmcFile = getSystemProperty("pmc", null);
+        final String medlineFile = getSystemProperty("medline", null);
+
+        if (pmcFile != null) {
+            final NihTypeAReader reader = new NihTypeAReader();
+            try (InputStream file = new FileInputStream(pmcFile)) {
+                loader.load(reader.readJournals(file, UTF_8), reader.hasPmcParticipation());
+            }
+        }
+
+        if (medlineFile != null) {
+            final MedlineReader reader = new MedlineReader();
+            try (InputStream file = new FileInputStream(medlineFile)) {
+                loader.load(reader.readJournals(file, UTF_8), reader.hasPmcParticipation());
+            }
+        }
+
         LOG.info("done!");
 
-    }
-
-    @SuppressWarnings("resource")
-    private static Reader getReader() throws Exception {
-
-        final String fileName = getSystemProperty("file", null);
-        if (fileName != null) {
-            LOG.info("Reading from file " + fileName);
-            return new FileReader(fileName);
-        }
-
-        final CloseableHttpClient client = HttpClientBuilder.create().setRedirectStrategy(
-                new DefaultRedirectStrategy()).build();
-
-        final String url = getSystemProperty("url", DEFAULT_JOURNAL_LIST_URL);
-        LOG.info("Reading from URL " + url);
-        final HttpGet get = new HttpGet(url);
-
-        final CloseableHttpResponse response = client.execute(get);
-
-        if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
-            return new InputStreamReader(response.getEntity().getContent(), StandardCharsets.ISO_8859_1);
-        }
-
-        throw new RuntimeException("Bad http response to " + url + ": " + response.getStatusLine());
     }
 }

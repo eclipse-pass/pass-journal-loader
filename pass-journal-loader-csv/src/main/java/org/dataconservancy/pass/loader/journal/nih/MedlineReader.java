@@ -103,4 +103,9 @@ public class MedlineReader implements JournalReader {
         return line.substring(line.indexOf(':') + 1).trim();
     }
 
+    @Override
+    public boolean hasPmcParticipation() {
+        return false;
+    }
+
 }

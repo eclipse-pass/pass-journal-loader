@@ -17,6 +17,7 @@
 package org.dataconservancy.pass.loader.journal.nih;
 
 import java.net.URI;
+import java.util.Collection;
 import java.util.stream.Stream;
 
 import org.dataconservancy.pass.client.PassClient;
@@ -26,9 +27,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Loads journal records into the repository
+ * Loads journal or updates records into the repository
  * <p>
- * TODO: once we have a search service, check to see of the journal already exists before depositing it
+ * Uses ISSN to correlate parsed journals with journals in the repository, updates the repository only if PMC
+ * participation has changed.
  * </p>
  *
  * @author apb@jhu.edu
@@ -37,26 +39,63 @@ public class LoaderEngine {
 
     private final PassClient client;
 
+    private final JournalFinder finder;
+
+    private boolean doUpdates;
+
     Logger LOG = LoggerFactory.getLogger(LoaderEngine.class);
 
-    public LoaderEngine(PassClient client) {
+    public LoaderEngine(PassClient client, JournalFinder finder) {
         this.client = client;
+        this.finder = finder;
     }
 
-    public void load(Stream<JournalRecord> journals) {
+    public void load(Stream<Journal> journals, boolean doUpdates) {
         journals
-                .filter(JournalRecord::isActive)
-                .map(JournalRecord::journal)
                 .forEach(this::load);
     }
 
     private void load(Journal j) {
         final URI uri;
-        try {
-            uri = client.createResource(j);
-            LOG.debug("Loaded journal {} at {}", j.getNlmta(), uri);
-        } catch (final Exception e) {
-            LOG.warn("Could not load journal " + j.getName(), e);
+
+        if (j.getIssns().isEmpty()) {
+            LOG.warn("Journal has no ISSNs: {}", j.getName());
+            return;
         }
+
+        final Journal found = find(j.getIssns());
+
+        if (found == null) {
+            // If journal not found, deposit as new
+            try {
+                uri = client.createResource(j);
+                j.setId(uri);
+                finder.add(j);
+                LOG.debug("Loaded journal {} at {}", j.getNlmta(), uri);
+            } catch (final Exception e) {
+                LOG.warn("Could not load journal " + j.getName(), e);
+            }
+        } else if (doUpdates && found.getPmcParticipation() != j.getPmcParticipation()) {
+
+            // IF PMC participation has changed, update PMC participation in the repository.
+            try {
+                final Journal toUpdate = client.readResource(found.getId(), Journal.class);
+                toUpdate.setPmcParticipation(j.getPmcParticipation());
+                client.updateResource(toUpdate);
+            } catch (final Exception e) {
+                LOG.warn("Could not update journal");
+            }
+        }
+    }
+
+    private Journal find(Collection<String> issns) {
+        for (final String issn : issns) {
+            final Journal j = finder.byIssn(issn);
+            if (j != null) {
+                return j;
+            }
+        }
+
+        return null;
     }
 }

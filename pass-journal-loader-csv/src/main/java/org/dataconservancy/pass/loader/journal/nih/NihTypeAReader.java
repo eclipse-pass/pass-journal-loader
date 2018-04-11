@@ -19,7 +19,10 @@ package org.dataconservancy.pass.loader.journal.nih;
 import static java.util.stream.StreamSupport.stream;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.Reader;
+import java.nio.charset.Charset;
 import java.util.Objects;
 import java.util.stream.Stream;
 
@@ -32,20 +35,25 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * Reads the NIH type A participation .csv file
+ * <p>
+ * See also: http://www.ncbi.nlm.nih.gov/pmc/front-page/NIH_PA_journal_list.csv
+ * </p>
+ * 
  * @author apb@jhu.edu
  */
-public class NihTypeAReader {
+public class NihTypeAReader implements JournalReader {
 
     static final Logger LOG = LoggerFactory.getLogger(NihTypeAReader.class);
 
-    public static Stream<JournalRecord> readJournals(Reader csv) throws IOException {
+    public Stream<Journal> readJournals(Reader csv) throws IOException {
 
         return stream(CSVFormat.RFC4180.parse(csv).spliterator(), false)
                 .map(NihTypeAReader::toJournal)
                 .filter(Objects::nonNull);
     }
 
-    static JournalRecord toJournal(final CSVRecord record) {
+    static Journal toJournal(final CSVRecord record) {
 
         LOG.debug("Parsing CSV record..");
 
@@ -53,7 +61,6 @@ public class NihTypeAReader {
 
         try {
 
-            j.setPmcParticipation(PmcParticipation.A);
             j.setName(record.get(0));
             j.setNlmta(record.get(1));
 
@@ -66,18 +73,11 @@ public class NihTypeAReader {
             final String endDate = record.get(5);
             final boolean isActive = (endDate == null || endDate.trim().equals(""));
 
-            return new JournalRecord() {
+            if (isActive) {
+                j.setPmcParticipation(PmcParticipation.A);
+            }
 
-                @Override
-                public boolean isActive() {
-                    return isActive;
-                }
-
-                @Override
-                public Journal journal() {
-                    return j;
-                }
-            };
+            return j;
         } catch (final Exception e) {
             LOG.warn("Could not create journal record for {}", j.getName(), e);
             return null;
@@ -89,6 +89,20 @@ public class NihTypeAReader {
         if (issn != null && !issn.trim().equals("")) {
             journal.getIssns().add(issn);
         }
+    }
+
+    @Override
+    public Stream<Journal> readJournals(InputStream source, Charset charset) {
+        try {
+            return readJournals(new InputStreamReader(source, charset));
+        } catch (final Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public boolean hasPmcParticipation() {
+        return true;
     }
 
 }
