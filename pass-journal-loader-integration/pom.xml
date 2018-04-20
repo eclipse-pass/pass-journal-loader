@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.dataconservancy.pass</groupId>
     <artifactId>pass-journal-loader</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.1.0-SNAPSHOT</version>
   </parent>
   <artifactId>pass-journal-loader-integration</artifactId>
 
@@ -22,14 +22,6 @@
     </profile>
     <profile>
       <id>local-context</id>
-      <activation>
-
-        <!-- TODO: This is a workaround until the online context is updated, 
-          published, and dockerized -->
-        <property>
-          <name>!online</name>
-        </property>
-      </activation>
       <properties>
         <!-- Uses the local context at src/test/resources/docker/mnt/context.jsonld -->
         <COMPACTION_PRELOAD_FILE_PASS_STATIC>/mnt/context.jsonld</COMPACTION_PRELOAD_FILE_PASS_STATIC>

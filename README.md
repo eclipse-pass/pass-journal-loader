@@ -9,7 +9,7 @@ Parses the PMC type A journal `.csv` file, and/or the medline database `.txt` fi
 
 Using java sustem properties to launch the journal:
 
-    java -Dpmc=/path/to/pmc.csv -Dmedline=/path/to/medline.txt -Dpass.fedora.baseurl=http://localhost:8080/fcrepo/rest/ -jar pass-journal-loader-nih-0.1.0-exe.jar
+    java -Dpmc=/path/to/pmc.csv -Dmedline=/path/to/medline.txt -Dpass.fedora.baseurl=http://localhost:8080/fcrepo/rest/ -jar pass-journal-loader-nih-0.1.0-SNAPSHOT-exe.jar
 
 ### Properties or Environment Variables
 
