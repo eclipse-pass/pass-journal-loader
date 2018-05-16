@@ -33,8 +33,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.dataconservancy.pass.client.PassClient;
+import org.dataconservancy.pass.client.PassClientFactory;
 import org.dataconservancy.pass.client.fedora.FedoraConfig;
-import org.dataconservancy.pass.client.fedora.FedoraPassClient;
 import org.dataconservancy.pass.model.Journal;
 import org.dataconservancy.pass.model.PmcParticipation;
 
@@ -55,7 +55,7 @@ import org.slf4j.LoggerFactory;
  */
 public class DepositIT {
 
-    final PassClient client = new FedoraPassClient();
+    final PassClient client = PassClientFactory.getPassClient();
 
     Logger LOG = LoggerFactory.getLogger(DepositIT.class);
 

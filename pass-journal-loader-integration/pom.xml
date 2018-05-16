@@ -140,24 +140,6 @@
         </executions>
       </plugin>
 
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-failsafe-plugin</artifactId>
-        <configuration>
-          <systemProperties>
-            <pass.fedora.baseurl>http://${FCREPO_HOST}:${FCREPO_PORT}/fcrepo/rest/</pass.fedora.baseurl>
-          </systemProperties>
-        </configuration>
-        <executions>
-          <execution>
-            <goals>
-              <goal>integration-test</goal>
-              <goal>verify</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-
     </plugins>
   </build>
 

@@ -22,8 +22,8 @@ import static org.dataconservancy.pass.client.util.ConfigUtil.getSystemProperty;
 import java.io.FileInputStream;
 import java.io.InputStream;
 
+import org.dataconservancy.pass.client.PassClientFactory;
 import org.dataconservancy.pass.client.fedora.FedoraConfig;
-import org.dataconservancy.pass.client.fedora.FedoraPassClient;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +43,7 @@ public class Main {
 
         final JournalFinder finder = new BatchJournalFinder(FedoraConfig.getBaseUrl() + "journals");
 
-        try (final LoaderEngine loader = new LoaderEngine(new FedoraPassClient(), finder)) {
+        try (final LoaderEngine loader = new LoaderEngine(PassClientFactory.getPassClient(), finder)) {
 
             if (getSystemProperty("dryRun", null) != null) {
                 loader.setDryRun(true);

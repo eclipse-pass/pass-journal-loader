@@ -15,7 +15,7 @@
     <junit.version>4.12</junit.version>
     <logback.version>1.2.3</logback.version>
     <mockito.version>2.18.0</mockito.version>
-    <pass.java.client.version>0.1.0-SNAPSHOT</pass.java.client.version>
+    <pass.java.client.version>0.3.0-SNAPSHOT</pass.java.client.version>
 
     <build-helper-maven-plugin.version>3.0.0</build-helper-maven-plugin.version>
     <docker-maven-plugin.version>0.24.0</docker-maven-plugin.version>
@@ -70,7 +70,7 @@
     <dependencies>
       <dependency>
         <groupId>org.dataconservancy.pass</groupId>
-        <artifactId>pass-fedora-client</artifactId>
+        <artifactId>pass-data-client</artifactId>
         <version>${pass.java.client.version}</version>
       </dependency>
 
@@ -103,4 +103,37 @@
 
     </dependencies>
   </dependencyManagement>
+
+  <distributionManagement>
+    <snapshotRepository>
+      <id>ossrh</id>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+    </snapshotRepository>
+  </distributionManagement>
+
+  <repositories>
+    <repository>
+      <id>oss</id>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+    </repository>
+    <repository>
+      <id>dc.public.snapshots</id>
+      <name>Data Conservancy Public Maven Repository (snapshots)</name>
+      <layout>default</layout>
+      <url>http://maven.dataconservancy.org/public/snapshots/</url>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+  </repositories>
+
 </project>
