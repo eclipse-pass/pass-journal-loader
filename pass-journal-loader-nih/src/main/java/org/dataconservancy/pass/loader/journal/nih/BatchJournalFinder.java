@@ -54,9 +54,9 @@ public class BatchJournalFinder implements JournalFinder {
 
     Set<String> typeARefs = new HashSet<>();
 
-    private static final String ISSNS = "http://example.org/pass/issn";
+    private static final String ISSNS = "http://oapass.org/ns/pass#issn";
 
-    private static final String PMC_PARTICIPATION = "http://example.org/pass/pmcParticipation";
+    private static final String PMC_PARTICIPATION = "http://oapass.org/ns/pass#pmcParticipation";
 
     void load(InputStream ntriples) throws IOException {
         try (InputStream in = ntriples) {
