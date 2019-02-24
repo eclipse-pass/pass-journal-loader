@@ -52,7 +52,7 @@ public class MedlineReaderTest {
     }
 
     @Test
-    public void medlineTitlesTest() throws Exception {
+    public void medlineTitlesAndAbbreviationsTest() throws Exception {
         try (final InputStream in = this.getClass().getResourceAsStream("/medline.txt")) {
 
             final MedlineReader toTest = new MedlineReader();
@@ -64,6 +64,11 @@ public class MedlineReaderTest {
             assertTrue(records.get(0).getName().equals("First Journal"));
             assertTrue(records.get(1).getName().equals("Second Journal"));
             assertTrue(records.get(2).getName().equals("Third Journal"));
+
+            assertTrue(records.get(0).getNlmta().equals("1jr"));
+            assertTrue(records.get(1).getNlmta().equals("2jr"));
+            assertTrue(records.get(2).getNlmta().equals("3jr"));
         }
     }
+
 }

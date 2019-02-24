@@ -40,6 +40,8 @@ public class MedlineReader implements JournalReader {
 
     static final String ISSN_FIELD = "ISSN";
 
+    static final String ABBR_FIELD = "MedAbbr";
+
     @Override
     public Stream<Journal> readJournals(InputStream source, Charset charset) {
 
@@ -83,6 +85,8 @@ public class MedlineReader implements JournalReader {
                         if (issn.length() > 0) {
                             j.getIssns().add(String.join(":", type, issn));
                         }
+                    } else if (line.startsWith(ABBR_FIELD)) {
+                        j.setNlmta(extract(line));
                     }
                 }
 
