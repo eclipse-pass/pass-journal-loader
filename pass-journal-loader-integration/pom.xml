@@ -67,9 +67,8 @@
             <nih.loader.jar>${org.dataconservancy.pass:pass-journal-loader-nih:jar:exe}</nih.loader.jar>
             <pass.fedora.baseurl>http://${FCREPO_HOST}:${FCREPO_PORT}/fcrepo/rest/</pass.fedora.baseurl>
           </systemPropertyVariables>
-          <configuration>
-            <classpathDependencyScopeExclude>runtime</classpathDependencyScopeExclude>
-          </configuration>
+       <!--    <classpathDependencyScopeExclude>runtime</classpathDependencyScopeExclude>
+       -->
         </configuration>
       </plugin>
 
