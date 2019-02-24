@@ -64,9 +64,10 @@ public class NihTypeAReader implements JournalReader {
             j.setName(record.get(0));
             j.setNlmta(record.get(1));
 
-            // columns 2, 3 are issns
-            addIssnIfPresent(j, record.get(2));
-            addIssnIfPresent(j, record.get(3));
+            // columns 2, 3 are issns. column 2 is type "Print" and 3 is type "Online"
+            // see https://publicaccess.nih.gov/testsite/field_definitions.htm
+            addIssnIfPresent(j, record.get(2), "Print");
+            addIssnIfPresent(j, record.get(3), "Online");
 
             // 4 is start date (we don't cate)
             // 5 is end date (if ended, then it's not active
@@ -85,9 +86,9 @@ public class NihTypeAReader implements JournalReader {
 
     }
 
-    static void addIssnIfPresent(Journal journal, String issn) {
+    static void addIssnIfPresent(Journal journal, String issn, String type) {
         if (issn != null && !issn.trim().equals("")) {
-            journal.getIssns().add(issn);
+            journal.getIssns().add(String.join(":", type, issn));
         }
     }
 

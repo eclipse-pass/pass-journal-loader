@@ -45,9 +45,9 @@ public class MedlineReaderTest {
 
             assertEquals(3, records.size());
 
-            assertTrue(records.get(0).getIssns().equals(Arrays.asList("0000-0001")));
-            assertTrue(records.get(1).getIssns().equals(Arrays.asList("0000-0002")));
-            assertTrue(records.get(2).getIssns().equals(Arrays.asList("0000-0003", "0000-0004")));
+            assertTrue(records.get(0).getIssns().equals(Arrays.asList("Print:0000-0001")));
+            assertTrue(records.get(1).getIssns().equals(Arrays.asList("Online:0000-0002")));
+            assertTrue(records.get(2).getIssns().equals(Arrays.asList("Print:0000-0003", "Online:0000-0004")));
         }
     }
 
