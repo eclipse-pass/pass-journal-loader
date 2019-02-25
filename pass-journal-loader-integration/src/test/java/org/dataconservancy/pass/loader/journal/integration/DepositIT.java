@@ -71,7 +71,7 @@ public class DepositIT {
         load = jar(new File(System.getProperty("nih.loader.jar").toString()))
                 .logOutput(LoggerFactory.getLogger("nih-loader"))
                 .withEnv("medline", DepositIT.class.getResource("/medline.txt").getPath())
-                .withEnv("pass.fedora.baseurl", PASS_BASEURL)
+                .withEnv("PASS_FEDORA_BASEURL", PASS_BASEURL)
                 .withEnv("LOG.org.dataconservancy.pass", "DEBUG")
                 .start();
 
@@ -84,7 +84,7 @@ public class DepositIT {
         load = jar(new File(System.getProperty("nih.loader.jar").toString()))
                 .logOutput(LoggerFactory.getLogger("nih-loader"))
                 .withEnv("pmc", DepositIT.class.getResource("/pmc-1.csv").getPath())
-                .withEnv("pass.fedora.baseurl", PASS_BASEURL)
+                .withEnv("PASS_FEDORA_BASEURL", PASS_BASEURL)
                 .withEnv("LOG.org.dataconservancy.pass", "DEBUG")
                 .start();
 
@@ -97,7 +97,7 @@ public class DepositIT {
         load = jar(new File(System.getProperty("nih.loader.jar").toString()))
                 .logOutput(LoggerFactory.getLogger("nih-loader"))
                 .withEnv("pmc", DepositIT.class.getResource("/pmc-2.csv").getPath())
-                .withEnv("pass.fedora.baseurl", PASS_BASEURL)
+                .withEnv("PASS_FEDORA_BASEURL", PASS_BASEURL)
                 .withEnv("LOG.org.dataconservancy.pass", "DEBUG")
                 .start();
 
