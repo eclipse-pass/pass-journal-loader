@@ -101,9 +101,11 @@ public class DepositIT {
                 .withEnv("LOG_ORG_DATACONSERVANCY_PASS", "DEBUG")
                 .start();
 
+        wait(load);
+
         // The last dataset removed a type A journal, so now we expect only one
         assertEquals(3, listJournals().size());
-        assertEquals(2, typeA(listJournals()).size());
+        assertEquals(1, typeA(listJournals()).size());
     }
 
     private List<PmcParticipation> typeA(Collection<URI> uris) {

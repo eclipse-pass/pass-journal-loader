@@ -69,8 +69,8 @@ public class NihTypeAReader implements JournalReader {
             addIssnIfPresent(j, record.get(2), "Print");
             addIssnIfPresent(j, record.get(3), "Online");
 
-            // 4 is start date (we don't cate)
-            // 5 is end date (if ended, then it's not active
+            // 4 is start date (we don't care)
+            // 5 is end date (if ended, then it's not active)
             final String endDate = record.get(5);
             final boolean isActive = (endDate == null || endDate.trim().equals(""));
 
