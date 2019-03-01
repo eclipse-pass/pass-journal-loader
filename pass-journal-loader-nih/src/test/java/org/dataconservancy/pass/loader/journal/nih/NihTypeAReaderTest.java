@@ -58,8 +58,8 @@ public class NihTypeAReaderTest {
 
             final List<Journal> journals = toTest.readJournals(in, UTF_8).collect(Collectors.toList());;
 
-            assertEquals(Arrays.asList("2190-572X", "2190-5738"), journals.get(0).getIssns());
-            assertEquals(Arrays.asList("1550-7416"), journals.get(1).getIssns());
+            assertEquals(Arrays.asList("Print:2190-572X", "Online:2190-5738"), journals.get(0).getIssns());
+            assertEquals(Arrays.asList("Online:1550-7416"), journals.get(1).getIssns());
         }
     }
 
@@ -69,7 +69,7 @@ public class NihTypeAReaderTest {
 
             final NihTypeAReader toTest = new NihTypeAReader();
 
-            final List<Journal> journals = toTest.readJournals(in, UTF_8).collect(Collectors.toList());;
+            final List<Journal> journals = toTest.readJournals(in, UTF_8).collect(Collectors.toList());
 
             assertEquals("Journal 1", journals.get(0).getName());
             assertEquals("Journal 2", journals.get(1).getName());

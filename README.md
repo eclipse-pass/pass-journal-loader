@@ -9,16 +9,16 @@ Parses the PMC type A journal `.csv` file, and/or the medline database `.txt` fi
 
 Using java sustem properties to launch the journal:
 
-    java -Dpmc=/path/to/pmc.csv -Dmedline=/path/to/medline.txt -Dpass.fedora.baseurl=http://localhost:8080/fcrepo/rest/ -jar pass-journal-loader-nih-0.1.0-SNAPSHOT-exe.jar
+    java -DPMC=/path/to/pmc.csv -DMEDLINE=/path/to/medline.txt -DPASS_FEDORA_BASEURL=http://localhost:8080/fcrepo/rest/ -jar pass-journal-loader-nih-0.1.0-SNAPSHOT-exe.jar
 
 ### Properties or Environment Variables
 
-The following may be provided as system properties on the command line `Dprop-value`, or as environment variables:
+The following may be provided as system properties on the command line `-Dprop-value`, or as environment variables `PROP=value`:
 
-`pass.fedora.baseurl`
+`pass.fedora.url`
 BaseURL of Fedora.  Must end in trailing slash e.g. `http://localhost:8080/fcrepo/rest/`
 
-`dryRun`
+`DryRun`
 Do not add or update resources in the repository, just give statistics of resources that would be added or updated
 
 `pmc`
@@ -28,4 +28,4 @@ Location of the PMC "type A" journal .csv file, as retrieved from [http://www.nc
 Location of the Medline journal file, as retrieved from [ftp://ftp.ncbi.nih.gov/pubmed/J_Medline.txt](ftp://ftp.ncbi.nih.gov/pubmed/J_Medline.txt)
 
 `LOG.*`
-Adjust the logging level of a particular component, e.g. `-DLOG.org.dataconservancy.pass.client=WARN`
+Adjust the logging level of a particular component, e.g. `LOG.org.dataconservancy.pass.client=WARN`

@@ -70,9 +70,9 @@ public class DepositIT {
         // First, load all three journals using medline data
         load = jar(new File(System.getProperty("nih.loader.jar").toString()))
                 .logOutput(LoggerFactory.getLogger("nih-loader"))
-                .withEnv("medline", DepositIT.class.getResource("/medline.txt").getPath())
-                .withEnv("pass.fedora.baseurl", PASS_BASEURL)
-                .withEnv("LOG.org.dataconservancy.pass", "DEBUG")
+                .withEnv("MEDLINE", DepositIT.class.getResource("/medline.txt").getPath())
+                .withEnv("PASS_FEDORA_BASEURL", PASS_BASEURL)
+                .withEnv("LOG_ORG_DATACONSERVANCY_PASS", "DEBUG")
                 .start();
 
         wait(load);
@@ -83,9 +83,9 @@ public class DepositIT {
 
         load = jar(new File(System.getProperty("nih.loader.jar").toString()))
                 .logOutput(LoggerFactory.getLogger("nih-loader"))
-                .withEnv("pmc", DepositIT.class.getResource("/pmc-1.csv").getPath())
-                .withEnv("pass.fedora.baseurl", PASS_BASEURL)
-                .withEnv("LOG.org.dataconservancy.pass", "DEBUG")
+                .withEnv("PMC", DepositIT.class.getResource("/pmc-1.csv").getPath())
+                .withEnv("PASS_FEDORA_BASEURL", PASS_BASEURL)
+                .withEnv("LOG_ORG_DATACONSERVANCY_PASS", "DEBUG")
                 .start();
 
         wait(load);
@@ -96,14 +96,16 @@ public class DepositIT {
 
         load = jar(new File(System.getProperty("nih.loader.jar").toString()))
                 .logOutput(LoggerFactory.getLogger("nih-loader"))
-                .withEnv("pmc", DepositIT.class.getResource("/pmc-2.csv").getPath())
-                .withEnv("pass.fedora.baseurl", PASS_BASEURL)
-                .withEnv("LOG.org.dataconservancy.pass", "DEBUG")
+                .withEnv("PMC", DepositIT.class.getResource("/pmc-2.csv").getPath())
+                .withEnv("PASS_FEDORA_BASEURL", PASS_BASEURL)
+                .withEnv("LOG_ORG_DATACONSERVANCY_PASS", "DEBUG")
                 .start();
+
+        wait(load);
 
         // The last dataset removed a type A journal, so now we expect only one
         assertEquals(3, listJournals().size());
-        assertEquals(2, typeA(listJournals()).size());
+        assertEquals(1, typeA(listJournals()).size());
     }
 
     private List<PmcParticipation> typeA(Collection<URI> uris) {

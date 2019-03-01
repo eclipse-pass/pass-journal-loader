@@ -88,7 +88,7 @@ public class BatchJournalFinder implements JournalFinder {
 
     public BatchJournalFinder(String journalContainer) throws Exception {
 
-        LOG.info("Alalyzizng journals in " + journalContainer);
+        LOG.info("Analyzing journals in " + journalContainer);
 
         final HttpGet get = new HttpGet(journalContainer);
         get.setHeader("Accept", "application/n-triples");
