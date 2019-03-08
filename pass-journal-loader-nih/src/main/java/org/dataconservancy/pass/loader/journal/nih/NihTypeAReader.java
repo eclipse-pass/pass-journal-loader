@@ -57,7 +57,7 @@ public class NihTypeAReader implements JournalReader {
 
         LOG.debug("Parsing CSV record..");
 
-        final Journal j = new Journal();
+        final Journal j = new PMCSource();
 
         try {
 
