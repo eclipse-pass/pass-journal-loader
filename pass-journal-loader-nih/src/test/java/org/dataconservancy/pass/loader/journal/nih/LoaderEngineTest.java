@@ -75,7 +75,7 @@ public class LoaderEngineTest {
 
         when(client.readResource(eq(existing.getId()), eq(Journal.class))).thenReturn(existing);
 
-        final Journal toAdd = new Journal();
+        final Journal toAdd = new PMCSource();
         toAdd.setIssns(existing.getIssns());
         toAdd.setName(existing.getName());
         toAdd.setPmcParticipation(PmcParticipation.A);
@@ -103,7 +103,7 @@ public class LoaderEngineTest {
 
         when(client.readResource(eq(existing.getId()), eq(Journal.class))).thenReturn(existing);
 
-        final Journal toAdd = new Journal();
+        final Journal toAdd = new PMCSource();
         toAdd.setIssns(existing.getIssns());
         toAdd.setName(existing.getName());
 

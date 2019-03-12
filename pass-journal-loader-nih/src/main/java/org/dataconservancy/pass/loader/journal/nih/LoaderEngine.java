@@ -119,17 +119,28 @@ public class LoaderEngine implements AutoCloseable {
             } catch (final Exception e) {
                 LOG.warn("Could not load journal " + j.getName(), e);
             }
-        } else if (doUpdates && found.getPmcParticipation() != j.getPmcParticipation()) {
+        } else if (doUpdates &&
+                ((found.getPmcParticipation() != j.getPmcParticipation()) || !found.getIssns().containsAll(j
+                        .getIssns()))) {
 
-            // IF PMC participation has changed, update PMC participation in the repository.
+            // IF PMC participation or ISSNs has changed, update the journal in the repository.
             try {
                 final Journal toUpdate = client.readResource(found.getId(), Journal.class);
-                toUpdate.setPmcParticipation(j.getPmcParticipation());
+                toUpdate.setIssns(j.getIssns());
+
+                if (j instanceof PMCSource) {
+                    toUpdate.setPmcParticipation(j.getPmcParticipation());
+                }
+
+                if (j.getNlmta() != null) {
+                    toUpdate.setNlmta(j.getNlmta());
+                }
+
                 if (!dryRun) {
                     exe.execute(() -> {
                         client.updateResource(toUpdate);
                         numUpdated.incrementAndGet();
-                        LOG.debug("Updated PMC participation of {} at {}", j.getName(), j.getId());
+                        LOG.debug("Updated journal {} at {}", j.getName(), j.getId());
                     });
                 } else {
                     numUpdated.incrementAndGet();

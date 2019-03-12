@@ -105,9 +105,10 @@ public class BatchJournalFinder implements JournalFinder {
 
     @Override
     public synchronized Journal byIssn(String issn) {
-        if (issnMap.containsKey(issn)) {
+        String id = getUriByIssn(issn);
+        if (id != null) {
             final Journal j = new Journal();
-            j.setId(URI.create(issnMap.get(issn)));
+            j.setId(URI.create(id));
             if (typeARefs.contains(j.getId().toString())) {
                 j.setPmcParticipation(PmcParticipation.A);
             }
@@ -115,6 +116,21 @@ public class BatchJournalFinder implements JournalFinder {
         }
 
         return null;
+    }
+    
+    private String getUriByIssn(String issn) {
+        if (issnMap.containsKey(issn)) {
+            return issnMap.get(issn);
+        }
+        
+        String[] parts = issn.split(":");
+        
+        if (parts.length == 2) {
+            return issnMap.get(parts[1]);
+        }
+        
+        return null;
+        
     }
 
     static CloseableHttpClient getHttpClient() {
