@@ -52,9 +52,13 @@ public class BatchJournalFinder implements JournalFinder {
 
     Map<String, String> issnMap = new HashMap<>();
 
+    Map<String, String> nlmtaMap = new HashMap<>();
+
     Set<String> typeARefs = new HashSet<>();
 
     private static final String ISSNS = "http://oapass.org/ns/pass#issn";
+
+    private static final String NLMTAS = "http://oapass.org/ns/pass#nlmta";
 
     private static final String PMC_PARTICIPATION = "http://oapass.org/ns/pass#pmcParticipation";
 
@@ -72,6 +76,14 @@ public class BatchJournalFinder implements JournalFinder {
                     if (issnMap.putIfAbsent(issn, uri) != null) {
                         LOG.warn("Two records contain the same issn {}: <{}>, <{}>", issn, uri, issnMap.get(
                                 issn));
+                    }
+                }
+
+                if (predicate.equals(NLMTAS)) {
+                    final String nlmta = ntripLiteral(line);//spaces inside quotes mess split up - need to operate on line
+                    if (nlmtaMap.putIfAbsent(nlmta, uri) != null) {
+                        LOG.warn("Two records contain the same nlmta {}: <{}>, <{}>", nlmta, uri, nlmtaMap.get(
+                                nlmta));
                     }
                 }
 
@@ -100,6 +112,7 @@ public class BatchJournalFinder implements JournalFinder {
         }
 
         LOG.info("Found {} existing ISSNs", issnMap.size());
+        LOG.info("Found {} existing NLMTAs", nlmtaMap.size());
         LOG.info("Found {} PMC A journals", typeARefs.size());
     }
 
@@ -117,7 +130,22 @@ public class BatchJournalFinder implements JournalFinder {
 
         return null;
     }
-    
+
+    @Override
+    public synchronized Journal byNlmta(String nlmta) {
+        String id = getUriByNlmta(nlmta);
+        if (id != null) {
+            final Journal j = new Journal();
+            j.setId(URI.create(id));
+            if (typeARefs.contains(j.getId().toString())) {
+                j.setPmcParticipation(PmcParticipation.A);
+            }
+            return j;
+        }
+
+        return null;
+    }
+
     private String getUriByIssn(String issn) {
         if (issnMap.containsKey(issn)) {
             return issnMap.get(issn);
@@ -131,6 +159,14 @@ public class BatchJournalFinder implements JournalFinder {
         
         return null;
         
+    }
+
+    private String getUriByNlmta(String nlmta) {
+        if (nlmtaMap.containsKey(nlmta)) {
+            return nlmtaMap.get(nlmta);
+        }
+
+        return null;
     }
 
     static CloseableHttpClient getHttpClient() {
@@ -166,6 +202,20 @@ public class BatchJournalFinder implements JournalFinder {
 
     @Override
     public synchronized void add(Journal j) {
+
+        boolean copacetic = true;
+
+        String nlmta = j.getNlmta();
+        if(nlmta != null && nlmta.length() > 0 ) {
+            LOG.debug("Adding nlmta " + nlmta);
+            final String uri = nlmtaMap.putIfAbsent(nlmta, j.getId().toString());
+            if(uri != null && !uri.equals(j.getId().toString())) {
+                LOG.warn("Two records contain the same nlmta {}: <{}>, <{}>", nlmta, j.getId(), nlmtaMap.get(
+                        nlmta));
+                copacetic = false;
+            }
+        }
+
         for (final String issn : j.getIssns()) {
             LOG.debug("Adding issn " + issn);
             final String uri = issnMap.putIfAbsent(issn, j.getId().toString());
@@ -173,12 +223,16 @@ public class BatchJournalFinder implements JournalFinder {
             if (uri != null && !uri.equals(j.getId().toString())) {
                 LOG.warn("Two records contain the same issn {}: <{}>, <{}>", issn, j.getId(), issnMap.get(
                         issn));
-                return;
             }
+            copacetic = true;
         }
 
-        if (j.getPmcParticipation() == PmcParticipation.A) {
-            typeARefs.add(j.getId().toString());
+        if (!copacetic) {
+            return;
+        } else {
+            if (j.getPmcParticipation() == PmcParticipation.A) {
+                typeARefs.add(j.getId().toString());
+            }
         }
     }
 }

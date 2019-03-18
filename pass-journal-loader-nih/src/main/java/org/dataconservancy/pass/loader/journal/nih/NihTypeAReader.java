@@ -71,7 +71,10 @@ public class NihTypeAReader implements JournalReader {
 
             // 4 is start date (we don't care)
             // 5 is end date (if ended, then it's not active)
-            final String endDate = record.get(5);
+            String endDate = null;
+            if (record.size() > 5) {//csv file may lack trailing comma if this field is empty
+                endDate = record.get(5);
+            }
             final boolean isActive = (endDate == null || endDate.trim().equals(""));
 
             if (isActive) {

@@ -25,5 +25,7 @@ public interface JournalFinder {
 
     public Journal byIssn(String issn);
 
+    public Journal byNlmta(String nlmta);
+
     public void add(Journal j);
 }
