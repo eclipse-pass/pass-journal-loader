@@ -35,4 +35,19 @@ public class PMCSource extends Journal {
     public PMCSource(Journal initial) {
         super(initial);
     }
+
+    public Journal toJournal() {
+
+        Journal journal = new Journal();
+        journal.setId(this.getId());
+        journal.setContext(this.getContext());
+        journal.setPmcParticipation(this.getPmcParticipation());
+        journal.setIssns(this.getIssns());
+        journal.setNlmta(this.getNlmta());
+        journal.setName(this.getName());
+        journal.setPublisher(this.getPublisher());
+
+        return journal;
+
+    }
 }

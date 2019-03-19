@@ -223,13 +223,12 @@ public class BatchJournalFinder implements JournalFinder {
             if (uri != null && !uri.equals(j.getId().toString())) {
                 LOG.warn("Two records contain the same issn {}: <{}>, <{}>", issn, j.getId(), issnMap.get(
                         issn));
+            } else {
+                copacetic = true;
             }
-            copacetic = true;
         }
 
-        if (!copacetic) {
-            return;
-        } else {
+        if (copacetic) {
             if (j.getPmcParticipation() == PmcParticipation.A) {
                 typeARefs.add(j.getId().toString());
             }

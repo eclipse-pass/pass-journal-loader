@@ -58,6 +58,8 @@ public class LoaderEngine implements AutoCloseable {
 
     private final AtomicInteger numOk = new AtomicInteger(0);
 
+    private final AtomicInteger numError = new AtomicInteger(0);
+
     public LoaderEngine(PassClient client, JournalFinder finder) {
         this.client = client;
         this.finder = finder;
@@ -87,15 +89,26 @@ public class LoaderEngine implements AutoCloseable {
             LOG.info("Dry run: would have updated {} journals", numUpdated);
             LOG.info("Dry run: {} journals did not need updating", numOk);
             LOG.info("Dry run: Skipped {} journals due to lack of ISSN and NLMTA", numSkipped);
+            LOG.info("Dry run: Could not update {} journals due to an error", numError);
         } else {
             LOG.info("Created {} new journals", numCreated);
             LOG.info("Updated {} journals", numUpdated);
             LOG.info("{} journals did not need updating", numOk);
             LOG.info("Skipped {} journals due to lack of ISSN and NLMTA", numSkipped);
+            LOG.info("Could not update {} journals due to an error", numError);
         }
     }
 
-    private void load(Journal j, boolean doUpdates) {
+    private void load(Journal jrnl, boolean doUpdates) {
+
+        Journal j;
+
+        // hack - createResource() cannot have type PMCSource - type must be a PassEntity
+        if (jrnl instanceof PMCSource) {
+            j = ((PMCSource) jrnl).toJournal();
+        } else {
+            j = jrnl;
+        }
 
         if (j.getIssns().isEmpty() && (j.getNlmta() == null || j.getNlmta().isEmpty())) {
             LOG.debug("Journal has no ISSNs or NLMTA: {}", j.getName());
@@ -139,7 +152,7 @@ public class LoaderEngine implements AutoCloseable {
                     update = true;
                 }
 
-                if (!toUpdate.getNlmta().equals(j.getNlmta())) {
+                if ((toUpdate.getNlmta() == null  && j.getNlmta() != null) ||  !toUpdate.getNlmta().equals(j.getNlmta())) {
                     toUpdate.setNlmta(j.getNlmta());
                     update = true;
                 }
@@ -162,7 +175,8 @@ public class LoaderEngine implements AutoCloseable {
                     }
                 }
             } catch (final Exception e) {
-                LOG.warn("Could not update journal");
+                LOG.warn("Could not update journal " + e.toString());
+                numError.getAndIncrement();
             }
         }
     }
