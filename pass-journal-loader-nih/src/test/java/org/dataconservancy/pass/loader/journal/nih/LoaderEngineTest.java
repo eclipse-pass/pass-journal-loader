@@ -22,7 +22,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import java.net.URI;
@@ -75,7 +74,8 @@ public class LoaderEngineTest {
 
         when(client.readResource(eq(existing.getId()), eq(Journal.class))).thenReturn(existing);
 
-        final Journal toAdd = new PMCSource();
+        //final Journal toAdd = new PMCSource();
+        Journal toAdd = new Journal();
         toAdd.setIssns(existing.getIssns());
         toAdd.setName(existing.getName());
         toAdd.setPmcParticipation(PmcParticipation.A);
@@ -103,7 +103,8 @@ public class LoaderEngineTest {
 
         when(client.readResource(eq(existing.getId()), eq(Journal.class))).thenReturn(existing);
 
-        final Journal toAdd = new PMCSource();
+        //final Journal toAdd = new PMCSource();
+        final Journal toAdd = new Journal();
         toAdd.setIssns(existing.getIssns());
         toAdd.setName(existing.getName());
 
@@ -128,13 +129,15 @@ public class LoaderEngineTest {
 
         finder.add(existing);
 
+        when(client.readResource(eq(existing.getId()), eq(Journal.class))).thenReturn(existing);
+
         final Journal toAdd = new Journal();
         toAdd.setIssns(existing.getIssns());
         toAdd.setName(existing.getName());
 
         toTest.load(asList(toAdd).stream(), false);
 
-        verifyZeroInteractions(client);
+        verify(client, times(0)).updateResource(any());
     }
 
     @Test

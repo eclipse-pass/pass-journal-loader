@@ -18,6 +18,8 @@ package org.dataconservancy.pass.loader.journal.nih;
 
 import java.net.URI;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -60,6 +62,8 @@ public class LoaderEngine implements AutoCloseable {
 
     private final AtomicInteger numError = new AtomicInteger(0);
 
+    private Set<String> processed = new HashSet<>();
+
     public LoaderEngine(PassClient client, JournalFinder finder) {
         this.client = client;
         this.finder = finder;
@@ -71,10 +75,10 @@ public class LoaderEngine implements AutoCloseable {
         exe = Executors.newFixedThreadPool(threads);
     }
 
-    public void load(Stream<Journal> journals, boolean doUpdates) {
+    public void load(Stream<Journal> journals, boolean hasPmcParticipation) {
 
         journals
-                .forEach(j -> load(j, doUpdates));
+                .forEach(j -> load(j, hasPmcParticipation));
 
     }
 
@@ -95,20 +99,12 @@ public class LoaderEngine implements AutoCloseable {
             LOG.info("Updated {} journals", numUpdated);
             LOG.info("{} journals did not need updating", numOk);
             LOG.info("Skipped {} journals due to lack of ISSN and NLMTA", numSkipped);
+
             LOG.info("Could not update {} journals due to an error", numError);
         }
     }
 
-    private void load(Journal jrnl, boolean doUpdates) {
-
-        Journal j;
-
-        // hack - createResource() cannot have type PMCSource - type must be a PassEntity
-        if (jrnl instanceof PMCSource) {
-            j = ((PMCSource) jrnl).toJournal();
-        } else {
-            j = jrnl;
-        }
+    private void load(Journal j, boolean hasPmcParticipation) {
 
         if (j.getIssns().isEmpty() && (j.getNlmta() == null || j.getNlmta().isEmpty())) {
             LOG.debug("Journal has no ISSNs or NLMTA: {}", j.getName());
@@ -129,6 +125,7 @@ public class LoaderEngine implements AutoCloseable {
                         finder.add(j);
                         LOG.debug("Loaded journal {} at {}", j.getName(), uri);
                         numCreated.incrementAndGet();
+                        processed.add(j.getId().toString());
                     });
                 } else {
                     numCreated.incrementAndGet();
@@ -136,23 +133,24 @@ public class LoaderEngine implements AutoCloseable {
             } catch (final Exception e) {
                 LOG.warn("Could not load journal " + j.getName(), e);
             }
-        } else if (doUpdates) {
+        } else if (!processed.contains(found.getId().toString())){// we have a journal we haven't seen yet
 
             try {
                 boolean update = false;
                 final Journal toUpdate = client.readResource(found.getId(), Journal.class);
 
-                if (toUpdate.getPmcParticipation() != j.getPmcParticipation()) {
+                if (hasPmcParticipation && toUpdate.getPmcParticipation() != j.getPmcParticipation()) {
                     toUpdate.setPmcParticipation(j.getPmcParticipation());
                     update = true;
                 }
 
-                if (!toUpdate.getIssns().containsAll(j.getIssns())) {
+                if (j.getIssns() != null &&  (toUpdate.getIssns()!= null && !toUpdate.getIssns().containsAll(j.getIssns()))) {
                     toUpdate.setIssns(j.getIssns());
                     update = true;
                 }
 
-                if ((toUpdate.getNlmta() == null  && j.getNlmta() != null) ||  !toUpdate.getNlmta().equals(j.getNlmta())) {
+                if ((toUpdate.getNlmta() == null  && j.getNlmta() != null) ||
+                        (toUpdate.getNlmta() != null && !toUpdate.getNlmta().equals(j.getNlmta()))) {
                     toUpdate.setNlmta(j.getNlmta());
                     update = true;
                 }
@@ -174,6 +172,7 @@ public class LoaderEngine implements AutoCloseable {
                         numOk.getAndIncrement();
                     }
                 }
+                processed.add(toUpdate.getId().toString());
             } catch (final Exception e) {
                 LOG.warn("Could not update journal " + e.toString());
                 numError.getAndIncrement();
