@@ -144,7 +144,7 @@ public class LoaderEngine implements AutoCloseable {
                     update = true;
                 }
 
-                if (j.getIssns() != null &&  (toUpdate.getIssns()!= null && !toUpdate.getIssns().containsAll(j.getIssns()))) {
+                if (j.getIssns() != null &&  (toUpdate.getIssns()== null || !toUpdate.getIssns().containsAll(j.getIssns()))) {
                     toUpdate.setIssns(j.getIssns());
                     update = true;
                 }
