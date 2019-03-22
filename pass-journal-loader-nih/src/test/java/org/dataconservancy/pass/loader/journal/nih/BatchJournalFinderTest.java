@@ -43,9 +43,9 @@ public class BatchJournalFinderTest {
 
             toTest.load(in);
 
-            assertNotNull(toTest.byIssn("0000-0001"));
-            assertNotNull(toTest.byIssn("0000-0002"));
-            assertNotNull(toTest.byIssn("0000-0002X"));
+            assertNotNull(toTest.find(null, null, Arrays.asList("0000-0001")));
+            assertNotNull(toTest.find(null, null, Arrays.asList("0000-0002")));
+            assertNull(toTest.find(null, null, Arrays.asList("0000-0002X"))); //this URI was found in the previous line, not available now
 
         }
     }
@@ -58,7 +58,7 @@ public class BatchJournalFinderTest {
 
             toTest.load(in);
 
-            assertNull(toTest.byIssn("0000-000"));
+            assertNull(toTest.find(null, null, Arrays.asList("0000-000")));
 
         }
     }
@@ -72,8 +72,8 @@ public class BatchJournalFinderTest {
 
             toTest.load(in);
 
-            final Journal j1 = toTest.byIssn("0000-0001");
-            final Journal j2 = toTest.byIssn("0000-0002");
+            final Journal j1 = toTest.find(null, null, Arrays.asList("0000-0001"));
+            final Journal j2 = toTest.find(null, null, Arrays.asList("0000-0002"));
 
             assertNull(j1.getPmcParticipation());
             assertEquals(PmcParticipation.A, j2.getPmcParticipation());
@@ -95,9 +95,8 @@ public class BatchJournalFinderTest {
 
         toTest.add(toAdd);
 
-        final Journal found = toTest.byIssn("000-001");
+        final Journal found = toTest.find(null, null, Arrays.asList(ISSN1, ISSN2));
         assertNotNull(found);
-        assertNotNull(toTest.byIssn("000-002"));
 
         assertEquals(PmcParticipation.A, found.getPmcParticipation());
 

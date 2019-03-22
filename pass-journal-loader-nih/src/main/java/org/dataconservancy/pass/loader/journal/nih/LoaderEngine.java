@@ -112,7 +112,14 @@ public class LoaderEngine implements AutoCloseable {
             return;
         }
 
-        final Journal found = find(j.getNlmta(), j.getIssns());
+        Journal found = null;
+
+        try {
+            found = finder.find(j.getNlmta(), j.getName(), j.getIssns());
+        } catch (JournalFinderException e) {
+
+        }
+
 
         if (found == null) {
             // If journal not found, deposit as new
@@ -178,29 +185,5 @@ public class LoaderEngine implements AutoCloseable {
                 numError.getAndIncrement();
             }
         }
-    }
-
-
-    private Journal find(String nlmta, Collection<String> issns) {
-
-        if (nlmta != null && nlmta.length()>0) {
-            final Journal j = finder.byNlmta(nlmta);
-            if (j != null) {
-                return j;
-            } else {
-                LOG.debug("No hits for nlmta {}", nlmta);
-            }
-        }
-
-        for (final String issn : issns) {
-            final Journal j = finder.byIssn(issn);
-            if (j != null) {
-                return j;
-            } else {
-                LOG.debug("No hits for issn {}", issn);
-            }
-        }
-
-        return null;
     }
 }

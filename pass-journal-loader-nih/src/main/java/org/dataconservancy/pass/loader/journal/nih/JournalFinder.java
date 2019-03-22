@@ -18,14 +18,16 @@ package org.dataconservancy.pass.loader.journal.nih;
 
 import org.dataconservancy.pass.model.Journal;
 
+import java.util.List;
+
 /**
  * @author apb@jhu.edu
  */
 public interface JournalFinder {
 
-    public Journal byIssn(String issn);
+    Journal find(String nlmta, String name, List<String> issns) throws JournalFinderException;
 
-    public Journal byNlmta(String nlmta);
+    boolean isTypeA(String uri);
 
-    public void add(Journal j);
+    void add(Journal j);
 }
