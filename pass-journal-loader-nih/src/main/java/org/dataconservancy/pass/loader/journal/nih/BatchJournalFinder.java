@@ -22,7 +22,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.URI;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -33,7 +32,6 @@ import java.util.Collections;
 
 import org.dataconservancy.pass.client.fedora.FedoraConfig;
 import org.dataconservancy.pass.model.Journal;
-import org.dataconservancy.pass.model.PmcParticipation;
 
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
@@ -59,8 +57,6 @@ public class BatchJournalFinder implements JournalFinder {
 
     Map<String, Set<String>> nameMap = new HashMap<>();
 
-    Set<String> typeARefs = new HashSet<>();
-
     Set<String> foundUris = new HashSet<>();
 
     private static final String ISSNS = "http://oapass.org/ns/pass#issn";
@@ -68,8 +64,6 @@ public class BatchJournalFinder implements JournalFinder {
     private static final String NLMTAS = "http://oapass.org/ns/pass#nlmta";
 
     private static final String NAMES = "http://oapass.org/ns/pass#journalName";
-
-    private static final String PMC_PARTICIPATION = "http://oapass.org/ns/pass#pmcParticipation";
 
     void load(InputStream ntriples) throws IOException {
         try (InputStream in = ntriples) {
@@ -88,7 +82,6 @@ public class BatchJournalFinder implements JournalFinder {
                     issnMap.get(issn).add(uri);
                 }
 
-
                 if (predicate.equals(NLMTAS)) {
                     final String nlmta = ntripLiteral(line);//spaces inside quotes mess split up - need to operate on line
                     if (!nlmtaMap.containsKey(nlmta)) {
@@ -105,10 +98,6 @@ public class BatchJournalFinder implements JournalFinder {
                     nameMap.get(name).add(uri);
                 }
 
-
-                if (predicate.equals(PMC_PARTICIPATION) && "A".equals(ntripLiteral(spo[2]))) {
-                    typeARefs.add(uri);
-                }
             }
         }
     }
@@ -132,121 +121,81 @@ public class BatchJournalFinder implements JournalFinder {
 
         LOG.info("Found {} existing ISSNs", issnMap.size());
         LOG.info("Found {} existing NLMTAs", nlmtaMap.size());
-        LOG.info("Found {} PMC A journals", typeARefs.size());
-    }
-
- /*   @Override
-    public synchronized Journal byIssn(String issn) {
-        String id = getUriByIssn(issn);
-        if (id != null) {
-            final Journal j = new Journal();
-            j.setId(URI.create(id));
-            if (typeARefs.contains(j.getId().toString())) {
-                j.setPmcParticipation(PmcParticipation.A);
-            }
-            return j;
-        }
-
-        return null;
+        LOG.info("Found {} existing NAMES", nameMap.size());
     }
 
     @Override
-    public synchronized Journal byNlmta(String nlmta) {
-        String id = getUriByNlmta(nlmta);
-        if (id != null) {
-            final Journal j = new Journal();
-            j.setId(URI.create(id));
-            if (typeARefs.contains(j.getId().toString())) {
-                j.setPmcParticipation(PmcParticipation.A);
-            }
-            return j;
-        }
-
-        return null;
-    }
-*/
-    @Override
-    public synchronized Journal find(String nlmta, String name, List<String> issns) throws JournalFinderException {
+    public synchronized String find(String nlmta, String name, List<String> issns) {
         Set<String> nlmtaUriSet = getUrisByNlmta(nlmta);
         Set<String> nameUriSet = getUrisByName(name);
-        Set<String> issnUriSet = null;
+
+        Map<String, Integer> uriScores = new HashMap<>();
 
         if (!issns.isEmpty()) {
-            issnUriSet = new HashSet<>();
             for (String issn : issns) {
                 if (getUrisByIssn(issn) != null) {
-                    issnUriSet.addAll(getUrisByIssn(issn));
+                    for(String uri : getUrisByIssn(issn)){
+                        Integer i = uriScores.putIfAbsent(uri, 1);
+                        if (i != null) {
+                            uriScores.put(uri, i + 1);
+                        }
+                    }
                 }
             }
         }
 
-        Map<String, Integer> uriScores = new HashMap<>();
+
         if (nlmtaUriSet != null) {
             for (String uri : nlmtaUriSet) {
-                if (foundUris.contains(uri)) {
-                    break;
-                }
-                Integer i = uriScores.putIfAbsent(uri, 2);
+                Integer i = uriScores.putIfAbsent(uri, 1);
                 if (i != null) {
-                    uriScores.put(uri, i + 2);
+                    uriScores.put(uri, i + 1);
                 }
             }
         }
 
         if (nameUriSet != null) {
             for (String uri : nameUriSet) {
-                if (foundUris.contains(uri)) {
-                    break;
-                }
                 Integer i = uriScores.putIfAbsent(uri, 1);
                 if (i != null) {
                     uriScores.put(uri, i + 1);
                 }
             }
-
         }
-
-        if (issnUriSet != null) {
-            for (String uri : issnUriSet) {
-                if (foundUris.contains(uri)) {
-                    break;
-                }
-                Integer i = uriScores.putIfAbsent(uri, 2);
-                if (i != null) {
-                    uriScores.put(uri, i + 2);
-                }
-            }
-        }
-
 
 
         if(uriScores.size()>0) {//we have a possible uri - find out if it is matchy enough
             Integer highScore = Collections.max(uriScores.values());
+            int minimumQualifyingScore = 2;
+            List<String> sortedUris = new ArrayList<>();
 
-            if (uriScores.size() == 1 || highScore > 2) {//need to at least match two issns, an issn and an nlmta, or a name and one of these
-
-                List<String> sortedUris = new ArrayList<>();
+            for (int i = highScore; i >= minimumQualifyingScore; i--) {
                 for (String uri : uriScores.keySet()) {
-                    if (uriScores.get(uri) == highScore) {
+                    if(uriScores.get(uri) == i) {
                         sortedUris.add(uri);
                     }
                 }
-
-                String uri = sortedUris.get(0);
-                Journal j = new Journal();
-                j.setId(URI.create(uri));
-
-                if (typeARefs.contains(uri)) {
-                    j.setPmcParticipation(PmcParticipation.A);
-                }
-
-                foundUris.add(uri);
-                return j;
-
-            } else {
-                throw (new JournalFinderException(JournalFinderException.JFE_INSUFFICIENT_INFORMATION_ERROR_EXCEPTION));
             }
-        }
+
+            if (sortedUris.size() > 0 ) {// there are matching journals - decide if we have matched already
+                String foundUri = null;
+                for (int i = 0; i < sortedUris.size() ; i++) {
+                    String candidate = sortedUris.get(i);
+                    if ( !foundUris.contains(candidate)) {
+                        foundUri = candidate;
+                        break;
+                    }
+                }
+                if (foundUri != null) {
+                    foundUris.add(foundUri);
+                    return foundUri;
+                } else {//this journal has been processed already
+                    return "SKIP";
+                }
+            }
+            //TODO - had somthing matching, but not definitive enough
+            return "INCONCLUSIVE";
+        } //nothing matches, create a new journal
         return null;
     }
 
@@ -281,11 +230,6 @@ public class BatchJournalFinder implements JournalFinder {
         }
 
         return null;
-    }
-
-    @Override
-    public synchronized boolean isTypeA(String uri) {
-        return typeARefs.contains(uri);
     }
 
     static CloseableHttpClient getHttpClient() {
@@ -349,8 +293,6 @@ public class BatchJournalFinder implements JournalFinder {
         nameMap.get(name).add(uri);
         }
 
-        if (j.getPmcParticipation() == PmcParticipation.A) {
-                typeARefs.add(j.getId().toString());
-        }
+        foundUris.add(uri);
     }
 }

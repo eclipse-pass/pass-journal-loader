@@ -17,9 +17,6 @@
 package org.dataconservancy.pass.loader.journal.nih;
 
 import java.net.URI;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -62,7 +59,7 @@ public class LoaderEngine implements AutoCloseable {
 
     private final AtomicInteger numError = new AtomicInteger(0);
 
-    private Set<String> processed = new HashSet<>();
+    private final AtomicInteger numDup = new AtomicInteger(0);
 
     public LoaderEngine(PassClient client, JournalFinder finder) {
         this.client = client;
@@ -93,13 +90,14 @@ public class LoaderEngine implements AutoCloseable {
             LOG.info("Dry run: would have updated {} journals", numUpdated);
             LOG.info("Dry run: {} journals did not need updating", numOk);
             LOG.info("Dry run: Skipped {} journals due to lack of ISSN and NLMTA", numSkipped);
+            LOG.info("Dry run: Skipped {} journals due to suspected duplication", numDup);
             LOG.info("Dry run: Could not update {} journals due to an error", numError);
         } else {
             LOG.info("Created {} new journals", numCreated);
             LOG.info("Updated {} journals", numUpdated);
             LOG.info("{} journals did not need updating", numOk);
             LOG.info("Skipped {} journals due to lack of ISSN and NLMTA", numSkipped);
-
+            LOG.info("Skipped {} journals due to suspected duplication", numDup);
             LOG.info("Could not update {} journals due to an error", numError);
         }
     }
@@ -112,17 +110,9 @@ public class LoaderEngine implements AutoCloseable {
             return;
         }
 
-        Journal found = null;
+        String found = finder.find(j.getNlmta(), j.getName(), j.getIssns());
 
-        try {
-            found = finder.find(j.getNlmta(), j.getName(), j.getIssns());
-        } catch (JournalFinderException e) {
-
-        }
-
-
-        if (found == null) {
-            // If journal not found, deposit as new
+        if (found == null) {//create a new journal
             try {
                 if (!dryRun) {
                     exe.execute(() -> {
@@ -132,7 +122,6 @@ public class LoaderEngine implements AutoCloseable {
                         finder.add(j);
                         LOG.debug("Loaded journal {} at {}", j.getName(), uri);
                         numCreated.incrementAndGet();
-                        processed.add(j.getId().toString());
                     });
                 } else {
                     numCreated.incrementAndGet();
@@ -140,46 +129,50 @@ public class LoaderEngine implements AutoCloseable {
             } catch (final Exception e) {
                 LOG.warn("Could not load journal " + j.getName(), e);
             }
-        } else if (!processed.contains(found.getId().toString())){// we have a journal we haven't seen yet
+        } else if (found.equals("SKIP")) {//this matched something that was already processed
+            LOG.info("We have already processed this journal, skipping: {}" ,j.getName());
+        } else if (found.equals("INCONCLUSIVE")) {//this did not match enough elements
+            LOG.info("Journal URIs do not provide a conclusive match, skipping: {}", j.getName());
+        } else { //update this journal
 
             try {
+                URI uri = URI.create(found);
                 boolean update = false;
-                final Journal toUpdate = client.readResource(found.getId(), Journal.class);
+                final Journal toUpdate = client.readResource(uri, Journal.class);
 
                 if (hasPmcParticipation && toUpdate.getPmcParticipation() != j.getPmcParticipation()) {
                     toUpdate.setPmcParticipation(j.getPmcParticipation());
                     update = true;
                 }
 
-                if (j.getIssns() != null &&  (toUpdate.getIssns()== null || !toUpdate.getIssns().containsAll(j.getIssns()))) {
+                if (j.getIssns() != null && (toUpdate.getIssns() == null || !toUpdate.getIssns().containsAll(j.getIssns()))) {
                     toUpdate.setIssns(j.getIssns());
                     update = true;
                 }
 
-                if ((toUpdate.getNlmta() == null  && j.getNlmta() != null) ||
+                if ((toUpdate.getNlmta() == null && j.getNlmta() != null) ||
                         (toUpdate.getNlmta() != null && !toUpdate.getNlmta().equals(j.getNlmta()))) {
                     toUpdate.setNlmta(j.getNlmta());
                     update = true;
                 }
 
                 if (!dryRun) {
-                    if(update) {
-                    exe.execute(() -> {
-                        client.updateResource(toUpdate);
-                        numUpdated.incrementAndGet();
-                        LOG.debug("Updated journal {} at {}", j.getName(), j.getId());
-                    });
+                    if (update) {
+                        exe.execute(() -> {
+                            client.updateResource(toUpdate);
+                            numUpdated.incrementAndGet();
+                            LOG.debug("Updated journal {} at {}", j.getName(), j.getId());
+                        });
                     } else {
                         numOk.incrementAndGet();
                     }
                 } else {
-                    if(update) {
+                    if (update) {
                         numUpdated.incrementAndGet();
                     } else {
                         numOk.getAndIncrement();
                     }
                 }
-                processed.add(toUpdate.getId().toString());
             } catch (final Exception e) {
                 LOG.warn("Could not update journal " + e.toString());
                 numError.getAndIncrement();

@@ -48,16 +48,16 @@ public class LoaderEngineTest {
     @Mock
     PassClient client;
 
+    @Mock
+    BatchJournalFinder finder;
+
     @Captor
     ArgumentCaptor<Journal> journalCaptor;
-
-    JournalFinder finder;
 
     LoaderEngine toTest;
 
     @Before
     public void setUp() {
-        this.finder = new BatchJournalFinder();
 
         toTest = new LoaderEngine(client, finder);
     }
@@ -70,9 +70,8 @@ public class LoaderEngineTest {
         existing.setName("My Journal");
         existing.getIssns().add("000-123");
 
-        finder.add(existing);
-
         when(client.readResource(eq(existing.getId()), eq(Journal.class))).thenReturn(existing);
+        when(finder.find(existing.getNlmta(), existing.getName(), existing.getIssns())).thenReturn(existing.getId().toString());
 
         //final Journal toAdd = new PMCSource();
         Journal toAdd = new Journal();
@@ -99,9 +98,8 @@ public class LoaderEngineTest {
         existing.getIssns().add("000-123");
         existing.setPmcParticipation(PmcParticipation.A);
 
-        finder.add(existing);
-
         when(client.readResource(eq(existing.getId()), eq(Journal.class))).thenReturn(existing);
+        when(finder.find(existing.getNlmta(), existing.getName(), existing.getIssns())).thenReturn(existing.getId().toString());
 
         //final Journal toAdd = new PMCSource();
         final Journal toAdd = new Journal();
@@ -127,9 +125,8 @@ public class LoaderEngineTest {
         existing.getIssns().add("000-123");
         existing.setPmcParticipation(PmcParticipation.A);
 
-        finder.add(existing);
-
         when(client.readResource(eq(existing.getId()), eq(Journal.class))).thenReturn(existing);
+        when(finder.find(existing.getNlmta(), existing.getName(), existing.getIssns())).thenReturn(existing.getId().toString());
 
         final Journal toAdd = new Journal();
         toAdd.setIssns(existing.getIssns());
@@ -150,6 +147,8 @@ public class LoaderEngineTest {
         newJournal.setPmcParticipation(PmcParticipation.A);
 
         when(client.createResource(any(Journal.class))).thenReturn(URI.create("test:createSkipUpdatesTest"));
+        when(finder.find(newJournal.getNlmta(), newJournal.getName(), newJournal.getIssns())).thenReturn(null).
+                thenReturn(URI.create("test:createSkipUpdatesTest").toString());
 
         toTest.load(asList(newJournal, newJournal).stream(), true);
 

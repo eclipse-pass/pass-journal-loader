@@ -1,0 +1,12 @@
+<test:1> <http://oapass.org/ns/pass#issn> "0000-0001"^^<xsd:string> .
+<test:1> <http://oapass.org/ns/pass#issn> "0000-0002"^^<xsd:string> .
+<test:1> <http://oapass.org/ns/pass#nlmta> "NLMTA1"^^<xsd:string> .
+<test:1> <http://oapass.org/ns/pass#journalName> "Journal One"^^<xsd:string> .
+<test:2> <http://oapass.org/ns/pass#issn> "Print:0000-0003"^^<xsd:string> .
+<test:2> <http://oapass.org/ns/pass#issn> "Online:0000-0004"^^<xsd:string> .
+<test:2> <http://oapass.org/ns/pass#nlmta> "NLMTA2"^^<xsd:string> .
+<test:3> <http://oapass.org/ns/pass#issn> "0000-0001"^^<xsd:string> .
+<test:3> <http://oapass.org/ns/pass#nlmta> "NLMTA3"^^<xsd:string> .
+<test:3> <http://oapass.org/ns/pass#journalName> "Journal Three"^^<xsd:string> .
+<test:4> <http://oapass.org/ns/pass#journalName> "Journal One"^^<xsd:string> .
+<test:4> <http://oapass.org/ns/pass#issn> "0000-0002"^^<xsd:string> .

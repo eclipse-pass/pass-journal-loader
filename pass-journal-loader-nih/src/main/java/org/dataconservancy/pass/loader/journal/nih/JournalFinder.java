@@ -25,9 +25,7 @@ import java.util.List;
  */
 public interface JournalFinder {
 
-    Journal find(String nlmta, String name, List<String> issns) throws JournalFinderException;
-
-    boolean isTypeA(String uri);
+    String find(String nlmta, String name, List<String> issns);
 
     void add(Journal j);
 }
