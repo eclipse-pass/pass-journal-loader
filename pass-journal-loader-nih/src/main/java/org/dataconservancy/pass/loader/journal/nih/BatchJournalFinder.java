@@ -193,7 +193,7 @@ public class BatchJournalFinder implements JournalFinder {
                     return "SKIP";
                 }
             }
-            //TODO - had somthing matching, but not definitive enough
+            //had something matching, but not definitive enough
             return "INCONCLUSIVE";
         } //nothing matches, create a new journal
         return null;
