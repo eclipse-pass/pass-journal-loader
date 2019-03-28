@@ -44,16 +44,16 @@ import org.slf4j.LoggerFactory;
  */
 public class NihTypeAReader implements JournalReader {
 
-    static final Logger LOG = LoggerFactory.getLogger(NihTypeAReader.class);
+    private static final Logger LOG = LoggerFactory.getLogger(NihTypeAReader.class);
 
-    public Stream<Journal> readJournals(Reader csv) throws IOException {
+    private Stream<Journal> readJournals(Reader csv) throws IOException {
 
         return stream(CSVFormat.RFC4180.parse(csv).spliterator(), false)
                 .map(NihTypeAReader::toJournal)
                 .filter(Objects::nonNull);
     }
 
-    static Journal toJournal(final CSVRecord record) {
+    private static Journal toJournal(final CSVRecord record) {
 
         LOG.debug("Parsing CSV record..");
 
@@ -90,7 +90,7 @@ public class NihTypeAReader implements JournalReader {
 
     }
 
-    static void addIssnIfPresent(Journal journal, String issn, String type) {
+    private static void addIssnIfPresent(Journal journal, String issn, String type) {
         if (issn != null && !issn.trim().equals("")) {
             journal.getIssns().add(String.join(":", type, issn));
         }

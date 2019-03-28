@@ -22,13 +22,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.*;
 
 import org.dataconservancy.pass.client.fedora.FedoraConfig;
 import org.dataconservancy.pass.model.Journal;
@@ -49,15 +43,15 @@ import org.slf4j.LoggerFactory;
  */
 public class BatchJournalFinder implements JournalFinder {
 
-    Logger LOG = LoggerFactory.getLogger(BatchJournalFinder.class);
+    private Logger LOG = LoggerFactory.getLogger(BatchJournalFinder.class);
 
-    Map<String, Set<String>> issnMap = new HashMap<>();
+    private Map<String, Set<String>> issnMap = new HashMap<>();
 
-    Map<String, Set<String>> nlmtaMap = new HashMap<>();
+    private Map<String, Set<String>> nlmtaMap = new HashMap<>();
 
-    Map<String, Set<String>> nameMap = new HashMap<>();
+    private Map<String, Set<String>> nameMap = new HashMap<>();
 
-    Set<String> foundUris = new HashSet<>();
+    private Set<String> foundUris = new HashSet<>();
 
     private static final String ISSNS = "http://oapass.org/ns/pass#issn";
 
@@ -74,6 +68,7 @@ public class BatchJournalFinder implements JournalFinder {
                 final String uri = ntripleUri(spo[0]);
                 final String predicate = ntripleUri(spo[1]);
 
+                assert predicate != null;
                 if (predicate.equals(ISSNS)) {
                     final String issn = ntripLiteral(spo[2]);
                     if (!issnMap.containsKey(issn)) {
@@ -102,11 +97,11 @@ public class BatchJournalFinder implements JournalFinder {
         }
     }
 
-    public BatchJournalFinder() {
+    BatchJournalFinder() {
 
     }
 
-    public BatchJournalFinder(String journalContainer) throws Exception {
+    BatchJournalFinder(String journalContainer) throws Exception {
 
         LOG.info("Analyzing journals in " + journalContainer);
 
@@ -134,7 +129,7 @@ public class BatchJournalFinder implements JournalFinder {
         if (!issns.isEmpty()) {
             for (String issn : issns) {
                 if (getUrisByIssn(issn) != null) {
-                    for(String uri : getUrisByIssn(issn)){
+                    for(String uri : Objects.requireNonNull(getUrisByIssn(issn))){
                         Integer i = uriScores.putIfAbsent(uri, 1);
                         if (i != null) {
                             uriScores.put(uri, i + 1);
@@ -179,9 +174,8 @@ public class BatchJournalFinder implements JournalFinder {
 
             if (sortedUris.size() > 0 ) {// there are matching journals - decide if we have matched already
                 String foundUri = null;
-                for (int i = 0; i < sortedUris.size() ; i++) {
-                    String candidate = sortedUris.get(i);
-                    if ( !foundUris.contains(candidate)) {
+                for (String candidate : sortedUris) {
+                    if (!foundUris.contains(candidate)) {
                         foundUri = candidate;
                         break;
                     }
@@ -232,7 +226,7 @@ public class BatchJournalFinder implements JournalFinder {
         return null;
     }
 
-    static CloseableHttpClient getHttpClient() {
+    private static CloseableHttpClient getHttpClient() {
         final CredentialsProvider provider = new BasicCredentialsProvider();
         final UsernamePasswordCredentials credentials = new UsernamePasswordCredentials(FedoraConfig.getUserName(),
                 FedoraConfig.getPassword());
@@ -243,7 +237,7 @@ public class BatchJournalFinder implements JournalFinder {
                 .build();
     }
 
-    static String ntripleUri(String token) {
+    private static String ntripleUri(String token) {
         final int s = token.indexOf("<");
         final int f = token.indexOf(">");
         if (s != -1 && f != -1) {
@@ -253,7 +247,7 @@ public class BatchJournalFinder implements JournalFinder {
         return null;
     }
 
-    static String ntripLiteral(String token) {
+    private static String ntripLiteral(String token) {
         final int s = token.indexOf("\"");
         final int f = token.indexOf("\"", s + 1);
         if (s != -1 && f != -1) {

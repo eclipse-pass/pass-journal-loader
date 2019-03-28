@@ -34,13 +34,13 @@ import org.dataconservancy.pass.model.Journal;
  */
 public class MedlineReader implements JournalReader {
 
-    static final String BOUNDARY = "----";
+    private static final String BOUNDARY = "----";
 
-    static final String TITLE_FIELD = "JournalTitle";
+    private static final String TITLE_FIELD = "JournalTitle";
 
-    static final String ISSN_FIELD = "ISSN";
+    private static final String ISSN_FIELD = "ISSN";
 
-    static final String ABBR_FIELD = "MedAbbr";
+    private static final String ABBR_FIELD = "MedAbbr";
 
     @Override
     public Stream<Journal> readJournals(InputStream source, Charset charset) {

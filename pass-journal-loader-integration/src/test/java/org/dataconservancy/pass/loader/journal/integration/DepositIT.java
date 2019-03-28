@@ -55,20 +55,20 @@ import org.slf4j.LoggerFactory;
  */
 public class DepositIT {
 
-    final PassClient client = PassClientFactory.getPassClient();
+    private final PassClient client = PassClientFactory.getPassClient();
 
-    Logger LOG = LoggerFactory.getLogger(DepositIT.class);
+    private Logger LOG = LoggerFactory.getLogger(DepositIT.class);
 
-    Process load;
+    private Process load;
 
-    final String PASS_BASEURL = System.getProperty("pass.fedora.baseurl",
+    private final String PASS_BASEURL = System.getProperty("pass.fedora.baseurl",
             "http://localhost:8080/fcrepo/rest/");
 
     @Test
     public void loadFromFileTest() throws Exception {
 
         // First, load all three journals using medline data
-        load = jar(new File(System.getProperty("nih.loader.jar").toString()))
+        load = jar(new File(System.getProperty("nih.loader.jar")))
                 .logOutput(LoggerFactory.getLogger("nih-loader"))
                 .withEnv("MEDLINE", DepositIT.class.getResource("/medline.txt").getPath())
                 .withEnv("PASS_FEDORA_BASEURL", PASS_BASEURL)
@@ -81,7 +81,7 @@ public class DepositIT {
         assertEquals(3, listJournals().size());
         assertEquals(0, typeA(listJournals()).size());
 
-        load = jar(new File(System.getProperty("nih.loader.jar").toString()))
+        load = jar(new File(System.getProperty("nih.loader.jar")))
                 .logOutput(LoggerFactory.getLogger("nih-loader"))
                 .withEnv("PMC", DepositIT.class.getResource("/pmc-1.csv").getPath())
                 .withEnv("PASS_FEDORA_BASEURL", PASS_BASEURL)
@@ -94,7 +94,7 @@ public class DepositIT {
         assertEquals(3, listJournals().size());
         assertEquals(2, typeA(listJournals()).size());
 
-        load = jar(new File(System.getProperty("nih.loader.jar").toString()))
+        load = jar(new File(System.getProperty("nih.loader.jar")))
                 .logOutput(LoggerFactory.getLogger("nih-loader"))
                 .withEnv("PMC", DepositIT.class.getResource("/pmc-2.csv").getPath())
                 .withEnv("PASS_FEDORA_BASEURL", PASS_BASEURL)
@@ -129,7 +129,7 @@ public class DepositIT {
                 final BufferedReader reader = new BufferedReader(new InputStreamReader(in, UTF_8));
                 for (String line = reader.readLine(); line != null; line = reader.readLine()) {
                     final String[] spo = line.split("\\s+");
-                    URIs.add(URI.create(ntripleUri(spo[2])));
+                    URIs.add(URI.create(Objects.requireNonNull(ntripleUri(spo[2]))));
                 }
             }
         }
@@ -144,7 +144,7 @@ public class DepositIT {
         }
     }
 
-    static String ntripleUri(String token) {
+    private static String ntripleUri(String token) {
         final int s = token.indexOf("<");
         final int f = token.indexOf(">");
         if (s != -1 && f != -1) {
@@ -154,7 +154,7 @@ public class DepositIT {
         return null;
     }
 
-    static CloseableHttpClient getHttpClient() {
+    private static CloseableHttpClient getHttpClient() {
         final CredentialsProvider provider = new BasicCredentialsProvider();
         final UsernamePasswordCredentials credentials = new UsernamePasswordCredentials(FedoraConfig.getUserName(),
                 FedoraConfig.getPassword());

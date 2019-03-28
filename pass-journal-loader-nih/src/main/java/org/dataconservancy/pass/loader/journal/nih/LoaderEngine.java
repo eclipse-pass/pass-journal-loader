@@ -39,13 +39,13 @@ import org.slf4j.LoggerFactory;
  */
 public class LoaderEngine implements AutoCloseable {
 
-    Executor exe = r -> r.run();
+    private Executor exe = r -> r.run();
 
     private final PassClient client;
 
     private final JournalFinder finder;
 
-    Logger LOG = LoggerFactory.getLogger(LoaderEngine.class);
+    private Logger LOG = LoggerFactory.getLogger(LoaderEngine.class);
 
     private boolean dryRun = false;
 
@@ -61,7 +61,7 @@ public class LoaderEngine implements AutoCloseable {
 
     private final AtomicInteger numDup = new AtomicInteger(0);
 
-    public LoaderEngine(PassClient client, JournalFinder finder) {
+    LoaderEngine(PassClient client, JournalFinder finder) {
         this.client = client;
         this.finder = finder;
     }
@@ -72,14 +72,14 @@ public class LoaderEngine implements AutoCloseable {
         exe = Executors.newFixedThreadPool(threads);
     }
 
-    public void load(Stream<Journal> journals, boolean hasPmcParticipation) {
+    void load(Stream<Journal> journals, boolean hasPmcParticipation) {
 
         journals
                 .forEach(j -> load(j, hasPmcParticipation));
 
     }
 
-    public void setDryRun(boolean dryRun) {
+    void setDryRun(boolean dryRun) {
         this.dryRun = dryRun;
     }
 

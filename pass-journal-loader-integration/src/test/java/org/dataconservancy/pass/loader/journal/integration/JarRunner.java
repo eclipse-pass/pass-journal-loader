@@ -94,7 +94,7 @@ public class JarRunner {
      * @return process
      * @throws IOException if there are problems executing.
      */
-    public Process start() throws IOException {
+    Process start() throws IOException {
         final Process proc = builder.start();
 
         if (log != null) {

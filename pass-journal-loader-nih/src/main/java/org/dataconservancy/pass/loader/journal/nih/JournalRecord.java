@@ -23,7 +23,7 @@ import org.dataconservancy.pass.model.Journal;
  */
 public interface JournalRecord {
 
-    public Journal journal();
+    Journal journal();
 
-    public boolean isActive();
+    boolean isActive();
 }
