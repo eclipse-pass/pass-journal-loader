@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 /**
  * @author apb@jhu.edu
  */
-public class JarRunner {
+class JarRunner {
 
     private final ProcessBuilder builder;
 
@@ -47,7 +47,7 @@ public class JarRunner {
      * @param args command line arguments, if any.
      * @return initialized jar runner.
      */
-    public static JarRunner jar(final File jar, final String... args) {
+    static JarRunner jar(final File jar, final String... args) {
         return new JarRunner(jar.getAbsolutePath(), args);
     }
 
@@ -58,7 +58,7 @@ public class JarRunner {
      * @param value The value
      * @return configured JarRunner.
      */
-    public JarRunner withEnv(final String key, final String value) {
+    JarRunner withEnv(final String key, final String value) {
         builder.environment().put(key, value);
         return this;
     }
@@ -72,7 +72,7 @@ public class JarRunner {
      * @param log Logger.
      * @return configured JarRunner.
      */
-    public JarRunner logOutput(final Logger log) {
+    JarRunner logOutput(final Logger log) {
         this.log = log;
         builder.redirectErrorStream(true);
         return this;
