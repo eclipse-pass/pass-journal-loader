@@ -46,7 +46,8 @@ public class BatchJournalFinderTest {
 
             assertNotNull(toTest.find(null, "Test 1 Journal", Collections.singletonList("0000-0001")));
             assertNotNull(toTest.find(null, "Test 2 Journal", Collections.singletonList("0000-0002")));
-            assertEquals("INCONCLUSIVE",(toTest.find(null, null, Collections.singletonList("0000-0002X"))));
+            //next would resolve to test:2, but that was just found, so we skip processing it
+            assertEquals("SKIP", toTest.find(null, "Test 2 Journal", Collections.singletonList("0000-0002X")));
 
         }
     }
@@ -93,10 +94,9 @@ public class BatchJournalFinderTest {
             toTest.load(in);
         }
 
-        //only one element matches -
+        //only one element matches - this should return null
         final String found = toTest.find(null, null, Collections.singletonList("0000-0001"));
-        assertNotNull(found);
-        assertEquals(found, "INCONCLUSIVE");
+        assertNull(found);
    }
 
     @Test

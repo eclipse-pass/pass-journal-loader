@@ -187,8 +187,6 @@ public class BatchJournalFinder implements JournalFinder {
                     return "SKIP";
                 }
             }
-            //had something matching, but not definitive enough
-            return "INCONCLUSIVE";
         } //nothing matches, create a new journal
         return null;
     }

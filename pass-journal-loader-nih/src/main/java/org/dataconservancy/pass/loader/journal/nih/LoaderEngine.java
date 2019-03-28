@@ -130,9 +130,8 @@ public class LoaderEngine implements AutoCloseable {
                 LOG.warn("Could not load journal " + j.getName(), e);
             }
         } else if (found.equals("SKIP")) {//this matched something that was already processed
+            numDup.getAndIncrement();
             LOG.info("We have already processed this journal, skipping: {}" ,j.getName());
-        } else if (found.equals("INCONCLUSIVE")) {//this did not match enough elements
-            LOG.info("Journal URIs do not provide a conclusive match, skipping: {}", j.getName());
         } else { //update this journal
 
             try {
