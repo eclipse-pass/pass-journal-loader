@@ -16,7 +16,6 @@
 
 package org.dataconservancy.pass.loader.journal.nih;
 
-import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -25,6 +24,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.net.URI;
+import java.util.stream.Stream;
 
 import org.dataconservancy.pass.client.PassClient;
 import org.dataconservancy.pass.model.Journal;
@@ -54,7 +54,7 @@ public class LoaderEngineTest {
     @Captor
     ArgumentCaptor<Journal> journalCaptor;
 
-    LoaderEngine toTest;
+    private LoaderEngine toTest;
 
     @Before
     public void setUp() {
@@ -79,7 +79,7 @@ public class LoaderEngineTest {
         toAdd.setName(existing.getName());
         toAdd.setPmcParticipation(PmcParticipation.A);
 
-        toTest.load(asList(toAdd).stream(), true);
+        toTest.load(Stream.of(toAdd), true);
 
         verify(client).updateResource(journalCaptor.capture());
 
@@ -106,7 +106,7 @@ public class LoaderEngineTest {
         toAdd.setIssns(existing.getIssns());
         toAdd.setName(existing.getName());
 
-        toTest.load(asList(toAdd).stream(), true);
+        toTest.load(Stream.of(toAdd), true);
 
         verify(client).updateResource(journalCaptor.capture());
 
@@ -132,7 +132,7 @@ public class LoaderEngineTest {
         toAdd.setIssns(existing.getIssns());
         toAdd.setName(existing.getName());
 
-        toTest.load(asList(toAdd).stream(), false);
+        toTest.load(Stream.of(toAdd), false);
 
         verify(client, times(0)).updateResource(any());
     }
@@ -150,7 +150,7 @@ public class LoaderEngineTest {
         when(finder.find(newJournal.getNlmta(), newJournal.getName(), newJournal.getIssns())).thenReturn(null).
                 thenReturn(URI.create("test:createSkipUpdatesTest").toString());
 
-        toTest.load(asList(newJournal, newJournal).stream(), true);
+        toTest.load(Stream.of(newJournal, newJournal), true);
 
         verify(client, times(1)).createResource(eq(newJournal));
         verify(client, times(0)).updateResource(any());

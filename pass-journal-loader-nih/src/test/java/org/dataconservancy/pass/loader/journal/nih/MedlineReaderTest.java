@@ -18,10 +18,10 @@ package org.dataconservancy.pass.loader.journal.nih;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -44,9 +44,9 @@ public class MedlineReaderTest {
 
             assertEquals(3, records.size());
 
-            assertTrue(records.get(0).getIssns().equals(Arrays.asList("Print:0000-0001")));
-            assertTrue(records.get(1).getIssns().equals(Arrays.asList("Online:0000-0002")));
-            assertTrue(records.get(2).getIssns().equals(Arrays.asList("Print:0000-0003", "Online:0000-0004")));
+            assertEquals(records.get(0).getIssns(), Collections.singletonList("Print:0000-0001"));
+            assertEquals(records.get(1).getIssns(), Collections.singletonList("Online:0000-0002"));
+            assertEquals(records.get(2).getIssns(), Arrays.asList("Print:0000-0003", "Online:0000-0004"));
         }
     }
 
@@ -60,13 +60,13 @@ public class MedlineReaderTest {
 
             assertEquals(3, records.size());
 
-            assertTrue(records.get(0).getName().equals("First Journal"));
-            assertTrue(records.get(1).getName().equals("Second Journal"));
-            assertTrue(records.get(2).getName().equals("Third Journal"));
+            assertEquals("First Journal", records.get(0).getName());
+            assertEquals("Second Journal", records.get(1).getName());
+            assertEquals("Third Journal", records.get(2).getName());
 
-            assertTrue(records.get(0).getNlmta().equals("1jr"));
-            assertTrue(records.get(1).getNlmta().equals("2jr"));
-            assertTrue(records.get(2).getNlmta().equals("3jr"));
+            assertEquals("1jr", records.get(0).getNlmta());
+            assertEquals("2jr", records.get(1).getNlmta());
+            assertEquals("3jr", records.get(2).getNlmta());
         }
     }
 
