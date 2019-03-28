@@ -185,7 +185,7 @@ public class BatchJournalFinderTest {
         String uri4 = "test:4";
         assertEquals(uri4, found);
 
-        found = toTest.find("NLMTA3", "Journal Three", Arrays.asList("0000-0005", "0000-0005"));
+        found = toTest.find("NLMTA3", "Journal Three", Arrays.asList("0000-0005", "0000-0006"));
         assertNotNull(found);
         String uri5 = "test:5";
         assertEquals(uri5, found);
