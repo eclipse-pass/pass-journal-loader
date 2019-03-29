@@ -31,8 +31,8 @@ import org.slf4j.LoggerFactory;
 /**
  * Loads journal or updates records into the repository
  * <p>
- * Uses ISSN to correlate parsed journals with journals in the repository, updates the repository only if PMC
- * participation has changed.
+ * Uses ISSN, name and NLMTA data to correlate parsed journals with journals in the repository, updates the repository if
+ * pmc participation, NLMTA, or ISSNS have changed
  * </p>
  *
  * @author apb@jhu.edu
@@ -149,7 +149,7 @@ public class LoaderEngine implements AutoCloseable {
                     update = true;
                 }
 
-                if ((toUpdate.getNlmta() == null && j.getNlmta() != null) ||
+               if ((toUpdate.getNlmta() == null && j.getNlmta() != null) ||
                         (toUpdate.getNlmta() != null && !toUpdate.getNlmta().equals(j.getNlmta()))) {
                     toUpdate.setNlmta(j.getNlmta());
                     update = true;
