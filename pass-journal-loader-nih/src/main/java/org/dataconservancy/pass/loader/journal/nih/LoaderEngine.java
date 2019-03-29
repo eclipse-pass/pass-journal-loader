@@ -92,14 +92,14 @@ public class LoaderEngine implements AutoCloseable {
             LOG.info("Dry run: {} journals did not need updating", numOk);
             LOG.info("Dry run: Skipped {} journals due to lack of ISSN and NLMTA", numSkipped);
             LOG.info("Dry run: Skipped {} journals due to suspected duplication", numDup);
-            LOG.info("Dry run: Could not update {} journals due to an error", numError);
+            LOG.info("Dry run: Could not load or update {} journal due to an error", numError);
         } else {
             LOG.info("Created {} new journals", numCreated);
             LOG.info("Updated {} journals", numUpdated);
             LOG.info("{} journals did not need updating", numOk);
             LOG.info("Skipped {} journals due to lack of ISSN and NLMTA", numSkipped);
             LOG.info("Skipped {} journals due to suspected duplication", numDup);
-            LOG.info("Could not update {} journals due to an error", numError);
+            LOG.info("Could not load or update {} journal due to an error", numError);
         }
     }
 
@@ -131,6 +131,7 @@ public class LoaderEngine implements AutoCloseable {
                 }
             } catch (final Exception e) {
                 LOG.warn("Could not load journal " + j.getName(), e);
+                numError.getAndIncrement();
             }
         } else if (found.equals("SKIP")) {//this matched something that was already processed
             numDup.getAndIncrement();
@@ -176,7 +177,7 @@ public class LoaderEngine implements AutoCloseable {
                     }
                 }
             } catch (final Exception e) {
-                LOG.warn("Could not update journal " + e.toString());
+                LOG.warn("Could not update journal " + j.getName(), e);
                 numError.getAndIncrement();
             }
         }

@@ -147,6 +147,7 @@ public class LoaderEngineTest {
         newJournal.setPmcParticipation(PmcParticipation.A);
 
         when(client.createResource(any(Journal.class))).thenReturn(URI.create("test:createSkipUpdatesTest"));
+        when(client.readResource(URI.create("test:createSkipUpdatesTest"), Journal.class)).thenReturn(newJournal);
         when(finder.find(newJournal.getNlmta(), newJournal.getName(), newJournal.getIssns())).thenReturn(null).
                 thenReturn(URI.create("test:createSkipUpdatesTest").toString());
 
