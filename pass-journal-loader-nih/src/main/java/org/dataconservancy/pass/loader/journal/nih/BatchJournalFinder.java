@@ -138,8 +138,9 @@ public class BatchJournalFinder implements JournalFinder {
 
         if (!issns.isEmpty()) {
             for (String issn : issns) {
-                if (getUrisByIssn(issn) != null) {
-                    for(String uri : Objects.requireNonNull(getUrisByIssn(issn))){
+                Set<String> issnList = getUrisByIssn(issn);
+                if (issnList != null) {
+                    for(String uri : issnList){
                         Integer i = uriScores.putIfAbsent(uri, 1);
                         if (i != null) {
                             uriScores.put(uri, i + 1);
@@ -148,8 +149,7 @@ public class BatchJournalFinder implements JournalFinder {
                 }
             }
         }
-
-
+        
         if (nlmtaUriSet != null) {
             for (String uri : nlmtaUriSet) {
                 Integer i = uriScores.putIfAbsent(uri, 1);

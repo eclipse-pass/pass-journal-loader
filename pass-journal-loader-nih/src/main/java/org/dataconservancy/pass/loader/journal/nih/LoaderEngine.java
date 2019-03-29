@@ -153,8 +153,7 @@ public class LoaderEngine implements AutoCloseable {
                     update = true;
                 }
 
-               if ((toUpdate.getNlmta() == null && j.getNlmta() != null) ||
-                        (toUpdate.getNlmta() != null && !toUpdate.getNlmta().equals(j.getNlmta()))) {
+               if (toUpdate.getNlmta() == null && j.getNlmta() != null) {
                     toUpdate.setNlmta(j.getNlmta());
                     update = true;
                 }
