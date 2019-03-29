@@ -92,14 +92,14 @@ public class LoaderEngine implements AutoCloseable {
             LOG.info("Dry run: {} journals did not need updating", numOk);
             LOG.info("Dry run: Skipped {} journals due to lack of ISSN and NLMTA", numSkipped);
             LOG.info("Dry run: Skipped {} journals due to suspected duplication", numDup);
-            LOG.info("Dry run: Could not load or update {} journal due to an error", numError);
+            LOG.info("Dry run: Could not load or update {} journals due to an error", numError);
         } else {
             LOG.info("Created {} new journals", numCreated);
             LOG.info("Updated {} journals", numUpdated);
             LOG.info("{} journals did not need updating", numOk);
             LOG.info("Skipped {} journals due to lack of ISSN and NLMTA", numSkipped);
             LOG.info("Skipped {} journals due to suspected duplication", numDup);
-            LOG.info("Could not load or update {} journal due to an error", numError);
+            LOG.info("Could not load or update {} journals due to an error", numError);
         }
     }
 

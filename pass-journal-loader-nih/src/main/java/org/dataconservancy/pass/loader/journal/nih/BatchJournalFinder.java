@@ -39,6 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * Analyzes journals in our repository in order to match incoming journals against our existing journals
  * @author apb@jhu.edu
  */
 public class BatchJournalFinder implements JournalFinder {
@@ -119,6 +120,15 @@ public class BatchJournalFinder implements JournalFinder {
         LOG.info("Found {} existing NAMES", nameMap.size());
     }
 
+    /**
+     *
+     * @param nlmta the NLMTA supplied in out incoming journal data
+     * @param name the journal name
+     * @param issns the list of issns
+     * @return the URI string of the matching journal if found, null if nothing is found
+     *              or a directive to SKIP processing on this journal if the matching journal
+     *              has already been processed
+     */
     @Override
     public synchronized String find(String nlmta, String name, List<String> issns) {
         Set<String> nlmtaUriSet = getUrisByNlmta(nlmta);
