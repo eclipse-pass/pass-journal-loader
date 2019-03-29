@@ -149,7 +149,7 @@ public class BatchJournalFinder implements JournalFinder {
                 }
             }
         }
-        
+
         if (nlmtaUriSet != null) {
             for (String uri : nlmtaUriSet) {
                 Integer i = uriScores.putIfAbsent(uri, 1);
