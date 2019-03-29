@@ -17,6 +17,7 @@
 package org.dataconservancy.pass.loader.journal.nih;
 
 import java.net.URI;
+import java.util.UUID;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -124,6 +125,8 @@ public class LoaderEngine implements AutoCloseable {
                         numCreated.incrementAndGet();
                     });
                 } else {
+                    j.setId(URI.create(UUID.randomUUID().toString()));
+                    finder.add(j);
                     numCreated.incrementAndGet();
                 }
             } catch (final Exception e) {
