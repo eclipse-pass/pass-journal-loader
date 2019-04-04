@@ -289,10 +289,11 @@ public class BatchJournalFinder implements JournalFinder {
 
         String name = j.getName();
         if (name != null && name.length() > 0) {
+            LOG.debug("Adding name " + name);
             if (!nameMap.containsKey(j.getName())) {
                 nameMap.put(name, new HashSet<>());
-        }
-        nameMap.get(name).add(uri);
+            }
+            nameMap.get(name).add(uri);
         }
 
         foundUris.add(uri);
