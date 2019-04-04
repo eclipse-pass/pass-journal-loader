@@ -60,9 +60,9 @@ public class MedlineReaderTest {
 
             assertEquals(3, records.size());
 
-            assertEquals("First Journal", records.get(0).getName());
-            assertEquals("Second Journal", records.get(1).getName());
-            assertEquals("Third Journal", records.get(2).getName());
+            assertEquals("First Journal", records.get(0).getJournalName());
+            assertEquals("Second Journal", records.get(1).getJournalName());
+            assertEquals("Third Journal", records.get(2).getJournalName());
 
             assertEquals("1jr", records.get(0).getNlmta());
             assertEquals("2jr", records.get(1).getNlmta());

@@ -18,7 +18,7 @@
     <junit.version>4.12</junit.version>
     <logback.version>1.2.3</logback.version>
     <mockito.version>2.25.1</mockito.version>
-    <pass.java.client.version>0.5.2</pass.java.client.version>
+    <pass.java.client.version>0.5.3-SNAPSHOT</pass.java.client.version>
 
     <build-helper-maven-plugin.version>3.0.0</build-helper-maven-plugin.version>
     <docker-maven-plugin.version>0.28.0</docker-maven-plugin.version>

@@ -287,10 +287,10 @@ public class BatchJournalFinder implements JournalFinder {
             issnMap.get(issn).add(uri);
         }
 
-        String name = j.getName();
+        String name = j.getJournalName();
         if (name != null && name.length() > 0) {
             LOG.debug("Adding name " + name);
-            if (!nameMap.containsKey(j.getName())) {
+            if (!nameMap.containsKey(j.getJournalName())) {
                 nameMap.put(name, new HashSet<>());
             }
             nameMap.get(name).add(uri);

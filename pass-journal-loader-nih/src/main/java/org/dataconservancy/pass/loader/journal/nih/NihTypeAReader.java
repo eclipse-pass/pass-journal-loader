@@ -62,7 +62,7 @@ public class NihTypeAReader implements JournalReader {
 
         try {
 
-            j.setName(record.get(0));
+            j.setJournalName(record.get(0));
             j.setNlmta(record.get(1));
 
             // columns 2, 3 are issns. column 2 is type "Print" and 3 is type "Online"
@@ -84,7 +84,7 @@ public class NihTypeAReader implements JournalReader {
 
             return j;
         } catch (final Exception e) {
-            LOG.warn("Could not create journal record for {}", j.getName(), e);
+            LOG.warn("Could not create journal record for {}", j.getJournalName(), e);
             return null;
         }
 

@@ -72,8 +72,8 @@ public class NihTypeAReaderTest {
 
             final List<Journal> journals = toTest.readJournals(in, UTF_8).collect(Collectors.toList());
 
-            assertEquals("Journal 1", journals.get(0).getName());
-            assertEquals("Journal 2", journals.get(1).getName());
+            assertEquals("Journal 1", journals.get(0).getJournalName());
+            assertEquals("Journal 2", journals.get(1).getJournalName());
         }
     }
 

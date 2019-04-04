@@ -106,12 +106,12 @@ public class LoaderEngine implements AutoCloseable {
     private void load(Journal j, boolean hasPmcParticipation) {
 
         if (j.getIssns().isEmpty() && (j.getNlmta() == null || j.getNlmta().isEmpty())) {
-            LOG.debug("Journal has no ISSNs or NLMTA: {}", j.getName());
+            LOG.debug("Journal has no ISSNs or NLMTA: {}", j.getJournalName());
             numSkipped.incrementAndGet();
             return;
         }
 
-        String found = finder.find(j.getNlmta(), j.getName(), j.getIssns());
+        String found = finder.find(j.getNlmta(), j.getJournalName(), j.getIssns());
 
         if (found == null) {//create a new journal
             try {
@@ -121,7 +121,7 @@ public class LoaderEngine implements AutoCloseable {
 
                         j.setId(uri);
                         finder.add(j);
-                        LOG.debug("Loaded journal {} at {}", j.getName(), uri);
+                        LOG.debug("Loaded journal {} at {}", j.getJournalName(), uri);
                         numCreated.incrementAndGet();
                     });
                 } else {
@@ -130,12 +130,12 @@ public class LoaderEngine implements AutoCloseable {
                     numCreated.incrementAndGet();
                 }
             } catch (final Exception e) {
-                LOG.warn("Could not load journal " + j.getName(), e);
+                LOG.warn("Could not load journal " + j.getJournalName(), e);
                 numError.getAndIncrement();
             }
         } else if (found.equals("SKIP")) {//this matched something that was already processed
             numDup.getAndIncrement();
-            LOG.info("We have already processed this journal, skipping: {}" ,j.getName());
+            LOG.info("We have already processed this journal, skipping: {}" ,j.getJournalName());
         } else { //update this journal
 
             try {
@@ -163,7 +163,7 @@ public class LoaderEngine implements AutoCloseable {
                         exe.execute(() -> {
                             client.updateResource(toUpdate);
                             numUpdated.incrementAndGet();
-                            LOG.debug("Updated journal {} at {}", j.getName(), j.getId());
+                            LOG.debug("Updated journal {} at {}", j.getJournalName(), j.getId());
                         });
                     } else {
                         numOk.incrementAndGet();
@@ -176,7 +176,7 @@ public class LoaderEngine implements AutoCloseable {
                     }
                 }
             } catch (final Exception e) {
-                LOG.warn("Could not update journal " + j.getName(), e);
+                LOG.warn("Could not update journal " + j.getJournalName(), e);
                 numError.getAndIncrement();
             }
         }

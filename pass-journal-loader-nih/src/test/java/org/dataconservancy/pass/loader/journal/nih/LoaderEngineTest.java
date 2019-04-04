@@ -67,16 +67,16 @@ public class LoaderEngineTest {
 
         final Journal existing = new Journal();
         existing.setId(URI.create("test:addPmcParticipation"));
-        existing.setName("My Journal");
+        existing.setJournalName("My Journal");
         existing.getIssns().add("000-123");
 
         when(client.readResource(eq(existing.getId()), eq(Journal.class))).thenReturn(existing);
-        when(finder.find(existing.getNlmta(), existing.getName(), existing.getIssns())).thenReturn(existing.getId().toString());
+        when(finder.find(existing.getNlmta(), existing.getJournalName(), existing.getIssns())).thenReturn(existing.getId().toString());
 
         //final Journal toAdd = new PMCSource();
         Journal toAdd = new Journal();
         toAdd.setIssns(existing.getIssns());
-        toAdd.setName(existing.getName());
+        toAdd.setJournalName(existing.getJournalName());
         toAdd.setPmcParticipation(PmcParticipation.A);
 
         toTest.load(Stream.of(toAdd), true);
@@ -85,7 +85,7 @@ public class LoaderEngineTest {
 
         final Journal updated = journalCaptor.getValue();
         assertEquals(existing.getId(), updated.getId());
-        assertEquals(existing.getName(), updated.getName());
+        assertEquals(existing.getJournalName(), updated.getJournalName());
         assertEquals(existing.getIssns(), updated.getIssns());
         assertEquals(updated.getPmcParticipation(), toAdd.getPmcParticipation());
     }
@@ -94,17 +94,17 @@ public class LoaderEngineTest {
     public void removePmcParticipationTest() {
         final Journal existing = new Journal();
         existing.setId(URI.create("test:removePmcParticipation"));
-        existing.setName("My Journal");
+        existing.setJournalName("My Journal");
         existing.getIssns().add("000-123");
         existing.setPmcParticipation(PmcParticipation.A);
 
         when(client.readResource(eq(existing.getId()), eq(Journal.class))).thenReturn(existing);
-        when(finder.find(existing.getNlmta(), existing.getName(), existing.getIssns())).thenReturn(existing.getId().toString());
+        when(finder.find(existing.getNlmta(), existing.getJournalName(), existing.getIssns())).thenReturn(existing.getId().toString());
 
         //final Journal toAdd = new PMCSource();
         final Journal toAdd = new Journal();
         toAdd.setIssns(existing.getIssns());
-        toAdd.setName(existing.getName());
+        toAdd.setJournalName(existing.getJournalName());
 
         toTest.load(Stream.of(toAdd), true);
 
@@ -112,7 +112,7 @@ public class LoaderEngineTest {
 
         final Journal updated = journalCaptor.getValue();
         assertEquals(existing.getId(), updated.getId());
-        assertEquals(existing.getName(), updated.getName());
+        assertEquals(existing.getJournalName(), updated.getJournalName());
         assertEquals(existing.getIssns(), updated.getIssns());
         assertEquals(updated.getPmcParticipation(), toAdd.getPmcParticipation());
     }
@@ -121,16 +121,16 @@ public class LoaderEngineTest {
     public void noUpdateTest() {
         final Journal existing = new Journal();
         existing.setId(URI.create("test:noUpdateTest"));
-        existing.setName("My Journal");
+        existing.setJournalName("My Journal");
         existing.getIssns().add("000-123");
         existing.setPmcParticipation(PmcParticipation.A);
 
         when(client.readResource(eq(existing.getId()), eq(Journal.class))).thenReturn(existing);
-        when(finder.find(existing.getNlmta(), existing.getName(), existing.getIssns())).thenReturn(existing.getId().toString());
+        when(finder.find(existing.getNlmta(), existing.getJournalName(), existing.getIssns())).thenReturn(existing.getId().toString());
 
         final Journal toAdd = new Journal();
         toAdd.setIssns(existing.getIssns());
-        toAdd.setName(existing.getName());
+        toAdd.setJournalName(existing.getJournalName());
 
         toTest.load(Stream.of(toAdd), false);
 
@@ -142,13 +142,13 @@ public class LoaderEngineTest {
 
         final Journal newJournal = new Journal();
 
-        newJournal.setName("My Journal");
+        newJournal.setJournalName("My Journal");
         newJournal.getIssns().add("000-123");
         newJournal.setPmcParticipation(PmcParticipation.A);
 
         when(client.createResource(any(Journal.class))).thenReturn(URI.create("test:createSkipUpdatesTest"));
         when(client.readResource(URI.create("test:createSkipUpdatesTest"), Journal.class)).thenReturn(newJournal);
-        when(finder.find(newJournal.getNlmta(), newJournal.getName(), newJournal.getIssns())).thenReturn(null).
+        when(finder.find(newJournal.getNlmta(), newJournal.getJournalName(), newJournal.getIssns())).thenReturn(null).
                 thenReturn(URI.create("test:createSkipUpdatesTest").toString());
 
         toTest.load(Stream.of(newJournal, newJournal), true);
