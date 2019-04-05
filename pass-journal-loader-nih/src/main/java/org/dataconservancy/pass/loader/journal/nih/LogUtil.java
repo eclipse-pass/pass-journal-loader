@@ -26,17 +26,17 @@ import ch.qos.logback.classic.Logger;
 /**
  * @author apb@jhu.edu
  */
-public class LogUtil {
+class LogUtil {
 
-    static final String PREFIX = "LOG.";
+    private static final String PREFIX = "LOG.";
 
-    public static void adjustLogLevels() {
+    static void adjustLogLevels() {
         concat(System.getenv().keySet().stream(), System.getProperties().stringPropertyNames().stream())
                 .filter(key -> key.startsWith(PREFIX))
                 .forEach(LogUtil::updateLogger);
     }
 
-    static void updateLogger(final String spec) {
+    private static void updateLogger(final String spec) {
         final String logger = spec.substring(PREFIX.length());
         final Level level = Level.toLevel(System.getenv().getOrDefault(spec, System.getProperty(spec, "DEBUG")));
         ((Logger) LoggerFactory.getLogger(logger)).setLevel(level);

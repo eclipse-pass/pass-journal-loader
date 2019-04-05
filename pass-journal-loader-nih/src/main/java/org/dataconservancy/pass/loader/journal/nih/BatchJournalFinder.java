@@ -22,15 +22,10 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.URI;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.dataconservancy.pass.client.fedora.FedoraConfig;
 import org.dataconservancy.pass.model.Journal;
-import org.dataconservancy.pass.model.PmcParticipation;
 
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
@@ -44,19 +39,26 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * Analyzes journals in our repository in order to match incoming journals against our existing journals
  * @author apb@jhu.edu
  */
 public class BatchJournalFinder implements JournalFinder {
 
-    Logger LOG = LoggerFactory.getLogger(BatchJournalFinder.class);
+    private Logger LOG = LoggerFactory.getLogger(BatchJournalFinder.class);
 
-    Map<String, String> issnMap = new HashMap<>();
+    private Map<String, Set<String>> issnMap = new HashMap<>();
 
-    Set<String> typeARefs = new HashSet<>();
+    private Map<String, Set<String>> nlmtaMap = new HashMap<>();
+
+    private Map<String, Set<String>> nameMap = new HashMap<>();
+
+    private Set<String> foundUris = new HashSet<>();
 
     private static final String ISSNS = "http://oapass.org/ns/pass#issn";
 
-    private static final String PMC_PARTICIPATION = "http://oapass.org/ns/pass#pmcParticipation";
+    private static final String NLMTAS = "http://oapass.org/ns/pass#nlmta";
+
+    private static final String NAMES = "http://oapass.org/ns/pass#journalName";
 
     void load(InputStream ntriples) throws IOException {
         try (InputStream in = ntriples) {
@@ -67,26 +69,40 @@ public class BatchJournalFinder implements JournalFinder {
                 final String uri = ntripleUri(spo[0]);
                 final String predicate = ntripleUri(spo[1]);
 
+                assert predicate != null;
                 if (predicate.equals(ISSNS)) {
                     final String issn = ntripLiteral(spo[2]);
-                    if (issnMap.putIfAbsent(issn, uri) != null) {
-                        LOG.warn("Two records contain the same issn {}: <{}>, <{}>", issn, uri, issnMap.get(
-                                issn));
+                    if (!issnMap.containsKey(issn)) {
+                        issnMap.put(issn, new HashSet<>());
                     }
+                    issnMap.get(issn).add(uri);
                 }
 
-                if (predicate.equals(PMC_PARTICIPATION) && "A".equals(ntripLiteral(spo[2]))) {
-                    typeARefs.add(uri);
+                if (predicate.equals(NLMTAS)) {
+                    final String nlmta = ntripLiteral(line);//spaces inside quotes mess split up - need to operate on line
+                    if (!nlmtaMap.containsKey(nlmta)) {
+                       nlmtaMap.put(nlmta, new HashSet<>());
+                    }
+                    nlmtaMap.get(nlmta).add(uri);
                 }
+
+                if (predicate.equals(NAMES)) {
+                    final String name = ntripLiteral(line);//spaces inside quotes mess split up - need to operate on line
+                    if (!nameMap.containsKey(name)) {
+                        nameMap.put(name, new HashSet<>());
+                    }
+                    nameMap.get(name).add(uri);
+                }
+
             }
         }
     }
 
-    public BatchJournalFinder() {
+    BatchJournalFinder() {
 
     }
 
-    public BatchJournalFinder(String journalContainer) throws Exception {
+    BatchJournalFinder(String journalContainer) throws Exception {
 
         LOG.info("Analyzing journals in " + journalContainer);
 
@@ -100,25 +116,93 @@ public class BatchJournalFinder implements JournalFinder {
         }
 
         LOG.info("Found {} existing ISSNs", issnMap.size());
-        LOG.info("Found {} PMC A journals", typeARefs.size());
+        LOG.info("Found {} existing NLMTAs", nlmtaMap.size());
+        LOG.info("Found {} existing NAMES", nameMap.size());
     }
 
+    /**
+     *
+     * @param nlmta the NLMTA supplied in out incoming journal data
+     * @param name the journal name
+     * @param issns the list of issns
+     * @return the URI string of the matching journal if found, null if nothing is found
+     *              or a directive to SKIP processing on this journal if the matching journal
+     *              has already been processed
+     */
     @Override
-    public synchronized Journal byIssn(String issn) {
-        String id = getUriByIssn(issn);
-        if (id != null) {
-            final Journal j = new Journal();
-            j.setId(URI.create(id));
-            if (typeARefs.contains(j.getId().toString())) {
-                j.setPmcParticipation(PmcParticipation.A);
+    public synchronized String find(String nlmta, String name, List<String> issns) {
+        Set<String> nlmtaUriSet = getUrisByNlmta(nlmta);
+        Set<String> nameUriSet = getUrisByName(name);
+
+        Map<String, Integer> uriScores = new HashMap<>();
+
+        if (!issns.isEmpty()) {
+            for (String issn : issns) {
+                Set<String> issnList = getUrisByIssn(issn);
+                if (issnList != null) {
+                    for(String uri : issnList){
+                        Integer i = uriScores.putIfAbsent(uri, 1);
+                        if (i != null) {
+                            uriScores.put(uri, i + 1);
+                        }
+                    }
+                }
             }
-            return j;
         }
 
+        if (nlmtaUriSet != null) {
+            for (String uri : nlmtaUriSet) {
+                Integer i = uriScores.putIfAbsent(uri, 1);
+                if (i != null) {
+                    uriScores.put(uri, i + 1);
+                }
+            }
+        }
+
+        if (nameUriSet != null) {
+            for (String uri : nameUriSet) {
+                Integer i = uriScores.putIfAbsent(uri, 1);
+                if (i != null) {
+                    uriScores.put(uri, i + 1);
+                }
+            }
+        }
+
+
+        if(uriScores.size()>0) {//we have a possible uri - find out if it is matchy enough
+            Integer highScore = Collections.max(uriScores.values());
+            int minimumQualifyingScore = 2;
+            List<String> sortedUris = new ArrayList<>();
+
+            for (int i = highScore; i >= minimumQualifyingScore; i--) {
+                for (String uri : uriScores.keySet()) {
+                    if(uriScores.get(uri) == i) {
+                        sortedUris.add(uri);
+                    }
+                }
+            }
+
+            if (sortedUris.size() > 0 ) {// there are matching journals - decide if we have matched already
+                String foundUri = null;
+                for (String candidate : sortedUris) {
+                    if (!foundUris.contains(candidate)) {
+                        foundUri = candidate;
+                        break;
+                    }
+                }
+                if (foundUri != null) {
+                    foundUris.add(foundUri);
+                    return foundUri;
+                } else {//this journal has been processed already
+                    return "SKIP";
+                }
+            }
+        } //nothing matches, create a new journal
         return null;
     }
-    
-    private String getUriByIssn(String issn) {
+
+
+    private synchronized Set<String> getUrisByIssn(String issn) {
         if (issnMap.containsKey(issn)) {
             return issnMap.get(issn);
         }
@@ -133,7 +217,24 @@ public class BatchJournalFinder implements JournalFinder {
         
     }
 
-    static CloseableHttpClient getHttpClient() {
+    private synchronized Set<String> getUrisByNlmta(String nlmta) {
+        if (nlmta != null && nlmta.length()>0 && nlmtaMap.containsKey(nlmta)) {
+            return nlmtaMap.get(nlmta);
+        }
+
+        return null;
+    }
+
+
+    private synchronized Set<String> getUrisByName(String name) {
+        if (name != null && name.length()>0 &&  nameMap.containsKey(name)) {
+            return nameMap.get(name);
+        }
+
+        return null;
+    }
+
+    private static CloseableHttpClient getHttpClient() {
         final CredentialsProvider provider = new BasicCredentialsProvider();
         final UsernamePasswordCredentials credentials = new UsernamePasswordCredentials(FedoraConfig.getUserName(),
                 FedoraConfig.getPassword());
@@ -144,7 +245,7 @@ public class BatchJournalFinder implements JournalFinder {
                 .build();
     }
 
-    static String ntripleUri(String token) {
+    private static String ntripleUri(String token) {
         final int s = token.indexOf("<");
         final int f = token.indexOf(">");
         if (s != -1 && f != -1) {
@@ -154,11 +255,11 @@ public class BatchJournalFinder implements JournalFinder {
         return null;
     }
 
-    static String ntripLiteral(String token) {
+    private static String ntripLiteral(String token) {
         final int s = token.indexOf("\"");
-        final int f = token.indexOf("\"", s + 1);
+        final int f = token.lastIndexOf("\"");//deal with journal names containing quotes
         if (s != -1 && f != -1) {
-            return token.substring(s + 1, f);
+            return token.substring(s + 1, f).replace("\\\"", "\"");//deal with journal names containing quotes
         }
 
         return null;
@@ -166,19 +267,35 @@ public class BatchJournalFinder implements JournalFinder {
 
     @Override
     public synchronized void add(Journal j) {
+
+        String uri = j.getId().toString();
+
+        String nlmta = j.getNlmta();
+        if (nlmta != null && nlmta.length() > 0) {
+            LOG.debug("Adding nlmta " + nlmta);
+            if (!nlmtaMap.containsKey(nlmta)) {
+                nlmtaMap.put(nlmta, new HashSet<>());
+            }
+            nlmtaMap.get(nlmta).add(uri);
+        }
+
         for (final String issn : j.getIssns()) {
             LOG.debug("Adding issn " + issn);
-            final String uri = issnMap.putIfAbsent(issn, j.getId().toString());
-
-            if (uri != null && !uri.equals(j.getId().toString())) {
-                LOG.warn("Two records contain the same issn {}: <{}>, <{}>", issn, j.getId(), issnMap.get(
-                        issn));
-                return;
+            if (!issnMap.containsKey(issn)) {
+                issnMap.put(issn, new HashSet<>());
             }
+            issnMap.get(issn).add(uri);
         }
 
-        if (j.getPmcParticipation() == PmcParticipation.A) {
-            typeARefs.add(j.getId().toString());
+        String name = j.getJournalName();
+        if (name != null && name.length() > 0) {
+            LOG.debug("Adding name " + name);
+            if (!nameMap.containsKey(j.getJournalName())) {
+                nameMap.put(name, new HashSet<>());
+            }
+            nameMap.get(name).add(uri);
         }
+
+        foundUris.add(uri);
     }
 }

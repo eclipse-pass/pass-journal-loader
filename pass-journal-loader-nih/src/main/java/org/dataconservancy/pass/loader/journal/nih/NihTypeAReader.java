@@ -44,24 +44,25 @@ import org.slf4j.LoggerFactory;
  */
 public class NihTypeAReader implements JournalReader {
 
-    static final Logger LOG = LoggerFactory.getLogger(NihTypeAReader.class);
+    private static final Logger LOG = LoggerFactory.getLogger(NihTypeAReader.class);
 
-    public Stream<Journal> readJournals(Reader csv) throws IOException {
+    private Stream<Journal> readJournals(Reader csv) throws IOException {
 
         return stream(CSVFormat.RFC4180.parse(csv).spliterator(), false)
                 .map(NihTypeAReader::toJournal)
                 .filter(Objects::nonNull);
     }
 
-    static Journal toJournal(final CSVRecord record) {
+    private static Journal toJournal(final CSVRecord record) {
 
         LOG.debug("Parsing CSV record..");
 
-        final Journal j = new PMCSource();
+        //final Journal j = new PMCSource();
+        final Journal j = new Journal();
 
         try {
 
-            j.setName(record.get(0));
+            j.setJournalName(record.get(0));
             j.setNlmta(record.get(1));
 
             // columns 2, 3 are issns. column 2 is type "Print" and 3 is type "Online"
@@ -71,7 +72,10 @@ public class NihTypeAReader implements JournalReader {
 
             // 4 is start date (we don't care)
             // 5 is end date (if ended, then it's not active)
-            final String endDate = record.get(5);
+            String endDate = null;
+            if (record.size() > 5) {//csv file may lack trailing comma if this field is empty
+                endDate = record.get(5);
+            }
             final boolean isActive = (endDate == null || endDate.trim().equals(""));
 
             if (isActive) {
@@ -80,13 +84,13 @@ public class NihTypeAReader implements JournalReader {
 
             return j;
         } catch (final Exception e) {
-            LOG.warn("Could not create journal record for {}", j.getName(), e);
+            LOG.warn("Could not create journal record for {}", j.getJournalName(), e);
             return null;
         }
 
     }
 
-    static void addIssnIfPresent(Journal journal, String issn, String type) {
+    private static void addIssnIfPresent(Journal journal, String issn, String type) {
         if (issn != null && !issn.trim().equals("")) {
             journal.getIssns().add(String.join(":", type, issn));
         }

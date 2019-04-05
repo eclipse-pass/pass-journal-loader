@@ -27,7 +27,7 @@ import org.dataconservancy.pass.model.Journal;
  */
 public interface JournalReader {
 
-    public Stream<Journal> readJournals(InputStream source, Charset charset);
+    Stream<Journal> readJournals(InputStream source, Charset charset);
 
-    public boolean hasPmcParticipation();
+    boolean hasPmcParticipation();
 }

@@ -16,23 +16,24 @@
 
 package org.dataconservancy.pass.loader.journal.nih;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-
 import java.io.InputStream;
 import java.net.URI;
 import java.util.Arrays;
+import java.util.Collections;
 
 import org.dataconservancy.pass.model.Journal;
 import org.dataconservancy.pass.model.PmcParticipation;
 
 import org.junit.Test;
 
+import static org.junit.Assert.*;
+
 /**
  * @author apb@jhu.edu
  */
 public class BatchJournalFinderTest {
+
+    private final String uri1 = "test:1";
 
     @Test
     public void journalFindTest() throws Exception {
@@ -43,9 +44,10 @@ public class BatchJournalFinderTest {
 
             toTest.load(in);
 
-            assertNotNull(toTest.byIssn("0000-0001"));
-            assertNotNull(toTest.byIssn("0000-0002"));
-            assertNotNull(toTest.byIssn("0000-0002X"));
+            assertNotNull(toTest.find(null, "Test 1 Journal", Collections.singletonList("0000-0001")));
+            assertNotNull(toTest.find(null, "Test 2 Journal", Collections.singletonList("0000-0002")));
+            //next would resolve to test:2, but that was just found, so we skip processing it
+            assertEquals("SKIP", toTest.find(null, "Test 2 Journal", Collections.singletonList("0000-0002X")));
 
         }
     }
@@ -58,30 +60,13 @@ public class BatchJournalFinderTest {
 
             toTest.load(in);
 
-            assertNull(toTest.byIssn("0000-000"));
+            assertNull(toTest.find(null, null, Collections.singletonList("0000-000")));
 
         }
     }
 
     @Test
-    public void pmcParticipationTest() throws Exception {
-
-        final BatchJournalFinder toTest = new BatchJournalFinder();
-
-        try (final InputStream in = this.getClass().getResourceAsStream("/journals.nt")) {
-
-            toTest.load(in);
-
-            final Journal j1 = toTest.byIssn("0000-0001");
-            final Journal j2 = toTest.byIssn("0000-0002");
-
-            assertNull(j1.getPmcParticipation());
-            assertEquals(PmcParticipation.A, j2.getPmcParticipation());
-        }
-    }
-
-    @Test
-    public void manualAddTest() throws Exception {
+    public void manualAddTest() {
         final BatchJournalFinder toTest = new BatchJournalFinder();
 
         final URI ID = URI.create("test/uri");
@@ -95,11 +80,132 @@ public class BatchJournalFinderTest {
 
         toTest.add(toAdd);
 
-        final Journal found = toTest.byIssn("000-001");
+        final String found = toTest.find(null, null, Arrays.asList(ISSN1, ISSN2));
         assertNotNull(found);
-        assertNotNull(toTest.byIssn("000-002"));
-
-        assertEquals(PmcParticipation.A, found.getPmcParticipation());
 
     }
+
+    @Test
+    public void insufficientMatchTest() throws Exception{
+        final BatchJournalFinder toTest = new BatchJournalFinder();
+
+        try (final InputStream in = this.getClass().getResourceAsStream("/moreJournals.nt")) {
+
+            toTest.load(in);
+        }
+
+        //only one element matches - this should return null
+        final String found = toTest.find(null, null, Collections.singletonList("0000-0001"));
+        assertNull(found);
+   }
+
+    @Test
+    public void nameAndOneIssnMatchTest() throws Exception {
+        final BatchJournalFinder toTest = new BatchJournalFinder();
+
+        try (final InputStream in = this.getClass().getResourceAsStream("/moreJournals.nt")) {
+
+            toTest.load(in);
+        }
+
+        //two elements match -
+        final String found = toTest.find(null, "Journal One", Collections.singletonList("0000-0001"));
+        assertNotNull(found);
+        assertEquals(uri1, found);
+    }
+
+    @Test
+    public void twoIssnsMatchTest() throws Exception {
+        final BatchJournalFinder toTest = new BatchJournalFinder();
+
+        try (final InputStream in = this.getClass().getResourceAsStream("/moreJournals.nt")) {
+
+            toTest.load(in);
+        }
+
+        //two elements match -
+        final String found = toTest.find(null, null, Arrays.asList("0000-0001", "0000-0002"));
+        assertNotNull(found);
+        assertEquals(uri1, found);
+    }
+
+
+    @Test
+    public void nlmtaAndIssnMatchTest() throws Exception {
+        final BatchJournalFinder toTest = new BatchJournalFinder();
+
+        try (final InputStream in = this.getClass().getResourceAsStream("/moreJournals.nt")) {
+
+            toTest.load(in);
+        }
+
+        //two elements match -
+        final String found = toTest.find("NLMTA1", null, Collections.singletonList("0000-0002"));
+        assertNotNull(found);
+        assertEquals(uri1, found);
+    }
+
+    @Test
+    public void duplicateJournalTest() throws Exception {
+        final BatchJournalFinder toTest = new BatchJournalFinder();
+
+        try (final InputStream in = this.getClass().getResourceAsStream("/moreJournals.nt")) {
+
+            toTest.load(in);
+        }
+        //two elements match -
+        String found = toTest.find("NLMTA1", "Journal One", Collections.singletonList("0000-0001"));
+        assertNotNull(found);
+        assertEquals(uri1, found);
+
+        //should be flagged as a duplicate
+        found = toTest.find("NLMTA1", "Journal One", Collections.singletonList("0000-0001"));
+        assertNotNull(found);
+        assertEquals("SKIP", found);
+
+    }
+
+    @Test
+    public void cascadingJournalTest() throws Exception {
+        final BatchJournalFinder toTest = new BatchJournalFinder();
+
+        try (final InputStream in = this.getClass().getResourceAsStream("/moreJournals.nt")) {
+
+            toTest.load(in);
+        }
+        //two elements match -
+        String found = toTest.find("NLMTA3", "Journal Three", Arrays.asList("0000-0005", "0000-0006"));
+        assertNotNull(found);
+        String uri3 = "test:3";
+        assertEquals(uri3, found);
+
+        //first uri is now removed from consideration - find next best qualifying match
+        found = toTest.find("NLMTA3", "Journal Three", Arrays.asList("0000-0005", "0000-0006"));
+        assertNotNull(found);
+        String uri4 = "test:4";
+        assertEquals(uri4, found);
+
+        found = toTest.find("NLMTA3", "Journal Three", Arrays.asList("0000-0005", "0000-0006"));
+        assertNotNull(found);
+        String uri5 = "test:5";
+        assertEquals(uri5, found);
+
+    }
+
+    @Test
+    public void newStyleIssnTest() throws Exception {
+        final BatchJournalFinder toTest = new BatchJournalFinder();
+
+        try (final InputStream in = this.getClass().getResourceAsStream("/moreJournals.nt")) {
+
+            toTest.load(in);
+        }
+        //two elements match -
+        final String found = toTest.find("NLMTA2", null, Arrays.asList("Print:0000-0003", "Online:0000-0004"));
+        assertNotNull(found);
+        String uri2 = "test:2";
+        assertEquals(uri2, found);
+
+    }
+
 }

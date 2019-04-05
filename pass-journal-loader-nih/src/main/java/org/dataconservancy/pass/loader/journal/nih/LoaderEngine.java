@@ -17,7 +17,7 @@
 package org.dataconservancy.pass.loader.journal.nih;
 
 import java.net.URI;
-import java.util.Collection;
+import java.util.UUID;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -32,21 +32,21 @@ import org.slf4j.LoggerFactory;
 /**
  * Loads journal or updates records into the repository
  * <p>
- * Uses ISSN to correlate parsed journals with journals in the repository, updates the repository only if PMC
- * participation has changed.
+ * Uses ISSN, name and NLMTA data to correlate parsed journals with journals in the repository, updates the repository if
+ * pmc participation, NLMTA, or ISSNS have changed
  * </p>
  *
  * @author apb@jhu.edu
  */
 public class LoaderEngine implements AutoCloseable {
 
-    Executor exe = r -> r.run();
+    private Executor exe = r -> r.run();
 
     private final PassClient client;
 
     private final JournalFinder finder;
 
-    Logger LOG = LoggerFactory.getLogger(LoaderEngine.class);
+    private Logger LOG = LoggerFactory.getLogger(LoaderEngine.class);
 
     private boolean dryRun = false;
 
@@ -56,7 +56,13 @@ public class LoaderEngine implements AutoCloseable {
 
     private final AtomicInteger numSkipped = new AtomicInteger(0);
 
-    public LoaderEngine(PassClient client, JournalFinder finder) {
+    private final AtomicInteger numOk = new AtomicInteger(0);
+
+    private final AtomicInteger numError = new AtomicInteger(0);
+
+    private final AtomicInteger numDup = new AtomicInteger(0);
+
+    LoaderEngine(PassClient client, JournalFinder finder) {
         this.client = client;
         this.finder = finder;
     }
@@ -67,14 +73,14 @@ public class LoaderEngine implements AutoCloseable {
         exe = Executors.newFixedThreadPool(threads);
     }
 
-    public void load(Stream<Journal> journals, boolean doUpdates) {
+    void load(Stream<Journal> journals, boolean hasPmcParticipation) {
 
         journals
-                .forEach(j -> load(j, doUpdates));
+                .forEach(j -> load(j, hasPmcParticipation));
 
     }
 
-    public void setDryRun(boolean dryRun) {
+    void setDryRun(boolean dryRun) {
         this.dryRun = dryRun;
     }
 
@@ -83,26 +89,31 @@ public class LoaderEngine implements AutoCloseable {
         if (dryRun) {
             LOG.info("Dry run: would have created {} new journals", numCreated);
             LOG.info("Dry run: would have updated {} journals", numUpdated);
-            LOG.info("Dry run: Skipped {} journals due to lack of ISSN", numSkipped);
+            LOG.info("Dry run: {} journals did not need updating", numOk);
+            LOG.info("Dry run: Skipped {} journals due to lack of ISSN and NLMTA", numSkipped);
+            LOG.info("Dry run: Skipped {} journals due to suspected duplication", numDup);
+            LOG.info("Dry run: Could not load or update {} journals due to an error", numError);
         } else {
             LOG.info("Created {} new journals", numCreated);
             LOG.info("Updated {} journals", numUpdated);
-            LOG.info("Skipped {} journals due to lack of ISSN", numSkipped);
+            LOG.info("{} journals did not need updating", numOk);
+            LOG.info("Skipped {} journals due to lack of ISSN and NLMTA", numSkipped);
+            LOG.info("Skipped {} journals due to suspected duplication", numDup);
+            LOG.info("Could not load or update {} journals due to an error", numError);
         }
     }
 
-    private void load(Journal j, boolean doUpdates) {
+    private void load(Journal j, boolean hasPmcParticipation) {
 
-        if (j.getIssns().isEmpty()) {
-            LOG.debug("Journal has no ISSNs: {}", j.getName());
+        if (j.getIssns().isEmpty() && (j.getNlmta() == null || j.getNlmta().isEmpty())) {
+            LOG.debug("Journal has no ISSNs or NLMTA: {}", j.getJournalName());
             numSkipped.incrementAndGet();
             return;
         }
 
-        final Journal found = find(j.getIssns());
+        String found = finder.find(j.getNlmta(), j.getJournalName(), j.getIssns());
 
-        if (found == null) {
-            // If journal not found, deposit as new
+        if (found == null) {//create a new journal
             try {
                 if (!dryRun) {
                     exe.execute(() -> {
@@ -110,57 +121,64 @@ public class LoaderEngine implements AutoCloseable {
 
                         j.setId(uri);
                         finder.add(j);
-                        LOG.debug("Loaded journal {} at {}", j.getName(), uri);
+                        LOG.debug("Loaded journal {} at {}", j.getJournalName(), uri);
                         numCreated.incrementAndGet();
                     });
                 } else {
+                    j.setId(URI.create(UUID.randomUUID().toString()));
+                    finder.add(j);
                     numCreated.incrementAndGet();
                 }
             } catch (final Exception e) {
-                LOG.warn("Could not load journal " + j.getName(), e);
+                LOG.warn("Could not load journal " + j.getJournalName(), e);
+                numError.getAndIncrement();
             }
-        } else if (doUpdates &&
-                ((found.getPmcParticipation() != j.getPmcParticipation()) || !found.getIssns().containsAll(j
-                        .getIssns()))) {
+        } else if (found.equals("SKIP")) {//this matched something that was already processed
+            numDup.getAndIncrement();
+            LOG.info("We have already processed this journal, skipping: {}" ,j.getJournalName());
+        } else { //update this journal
 
-            // IF PMC participation or ISSNs has changed, update the journal in the repository.
             try {
-                final Journal toUpdate = client.readResource(found.getId(), Journal.class);
-                toUpdate.setIssns(j.getIssns());
+                URI uri = URI.create(found);
+                boolean update = false;
+                final Journal toUpdate = client.readResource(uri, Journal.class);
 
-                if (j instanceof PMCSource) {
+                if (hasPmcParticipation && toUpdate.getPmcParticipation() != j.getPmcParticipation()) {
                     toUpdate.setPmcParticipation(j.getPmcParticipation());
+                    update = true;
                 }
 
-                if (j.getNlmta() != null) {
+                if (j.getIssns() != null && (toUpdate.getIssns() == null || !toUpdate.getIssns().containsAll(j.getIssns()))) {
+                    toUpdate.setIssns(j.getIssns());
+                    update = true;
+                }
+
+               if (toUpdate.getNlmta() == null && j.getNlmta() != null) {
                     toUpdate.setNlmta(j.getNlmta());
+                    update = true;
                 }
 
                 if (!dryRun) {
-                    exe.execute(() -> {
-                        client.updateResource(toUpdate);
-                        numUpdated.incrementAndGet();
-                        LOG.debug("Updated journal {} at {}", j.getName(), j.getId());
-                    });
+                    if (update) {
+                        exe.execute(() -> {
+                            client.updateResource(toUpdate);
+                            numUpdated.incrementAndGet();
+                            LOG.debug("Updated journal {} at {}", j.getJournalName(), j.getId());
+                        });
+                    } else {
+                        numOk.incrementAndGet();
+                    }
                 } else {
-                    numUpdated.incrementAndGet();
+                    if (update) {
+                        numUpdated.incrementAndGet();
+                    } else {
+                        numOk.getAndIncrement();
+                    }
                 }
             } catch (final Exception e) {
-                LOG.warn("Could not update journal");
+                LOG.warn("Could not update journal " + j.getJournalName(), e);
+                numError.getAndIncrement();
             }
         }
-    }
-
-    private Journal find(Collection<String> issns) {
-        for (final String issn : issns) {
-            final Journal j = finder.byIssn(issn);
-            if (j != null) {
-                return j;
-            } else {
-                LOG.debug("No hits for issn {}", issn);
-            }
-        }
-
-        return null;
     }
 }

@@ -16,16 +16,15 @@
 
 package org.dataconservancy.pass.loader.journal.nih;
 
-import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import java.net.URI;
+import java.util.stream.Stream;
 
 import org.dataconservancy.pass.client.PassClient;
 import org.dataconservancy.pass.model.Journal;
@@ -49,16 +48,16 @@ public class LoaderEngineTest {
     @Mock
     PassClient client;
 
+    @Mock
+    BatchJournalFinder finder;
+
     @Captor
     ArgumentCaptor<Journal> journalCaptor;
 
-    JournalFinder finder;
-
-    LoaderEngine toTest;
+    private LoaderEngine toTest;
 
     @Before
     public void setUp() {
-        this.finder = new BatchJournalFinder();
 
         toTest = new LoaderEngine(client, finder);
     }
@@ -68,25 +67,25 @@ public class LoaderEngineTest {
 
         final Journal existing = new Journal();
         existing.setId(URI.create("test:addPmcParticipation"));
-        existing.setName("My Journal");
+        existing.setJournalName("My Journal");
         existing.getIssns().add("000-123");
 
-        finder.add(existing);
-
         when(client.readResource(eq(existing.getId()), eq(Journal.class))).thenReturn(existing);
+        when(finder.find(existing.getNlmta(), existing.getJournalName(), existing.getIssns())).thenReturn(existing.getId().toString());
 
-        final Journal toAdd = new PMCSource();
+        //final Journal toAdd = new PMCSource();
+        Journal toAdd = new Journal();
         toAdd.setIssns(existing.getIssns());
-        toAdd.setName(existing.getName());
+        toAdd.setJournalName(existing.getJournalName());
         toAdd.setPmcParticipation(PmcParticipation.A);
 
-        toTest.load(asList(toAdd).stream(), true);
+        toTest.load(Stream.of(toAdd), true);
 
         verify(client).updateResource(journalCaptor.capture());
 
         final Journal updated = journalCaptor.getValue();
         assertEquals(existing.getId(), updated.getId());
-        assertEquals(existing.getName(), updated.getName());
+        assertEquals(existing.getJournalName(), updated.getJournalName());
         assertEquals(existing.getIssns(), updated.getIssns());
         assertEquals(updated.getPmcParticipation(), toAdd.getPmcParticipation());
     }
@@ -95,25 +94,25 @@ public class LoaderEngineTest {
     public void removePmcParticipationTest() {
         final Journal existing = new Journal();
         existing.setId(URI.create("test:removePmcParticipation"));
-        existing.setName("My Journal");
+        existing.setJournalName("My Journal");
         existing.getIssns().add("000-123");
         existing.setPmcParticipation(PmcParticipation.A);
 
-        finder.add(existing);
-
         when(client.readResource(eq(existing.getId()), eq(Journal.class))).thenReturn(existing);
+        when(finder.find(existing.getNlmta(), existing.getJournalName(), existing.getIssns())).thenReturn(existing.getId().toString());
 
-        final Journal toAdd = new PMCSource();
+        //final Journal toAdd = new PMCSource();
+        final Journal toAdd = new Journal();
         toAdd.setIssns(existing.getIssns());
-        toAdd.setName(existing.getName());
+        toAdd.setJournalName(existing.getJournalName());
 
-        toTest.load(asList(toAdd).stream(), true);
+        toTest.load(Stream.of(toAdd), true);
 
         verify(client).updateResource(journalCaptor.capture());
 
         final Journal updated = journalCaptor.getValue();
         assertEquals(existing.getId(), updated.getId());
-        assertEquals(existing.getName(), updated.getName());
+        assertEquals(existing.getJournalName(), updated.getJournalName());
         assertEquals(existing.getIssns(), updated.getIssns());
         assertEquals(updated.getPmcParticipation(), toAdd.getPmcParticipation());
     }
@@ -122,19 +121,20 @@ public class LoaderEngineTest {
     public void noUpdateTest() {
         final Journal existing = new Journal();
         existing.setId(URI.create("test:noUpdateTest"));
-        existing.setName("My Journal");
+        existing.setJournalName("My Journal");
         existing.getIssns().add("000-123");
         existing.setPmcParticipation(PmcParticipation.A);
 
-        finder.add(existing);
+        when(client.readResource(eq(existing.getId()), eq(Journal.class))).thenReturn(existing);
+        when(finder.find(existing.getNlmta(), existing.getJournalName(), existing.getIssns())).thenReturn(existing.getId().toString());
 
         final Journal toAdd = new Journal();
         toAdd.setIssns(existing.getIssns());
-        toAdd.setName(existing.getName());
+        toAdd.setJournalName(existing.getJournalName());
 
-        toTest.load(asList(toAdd).stream(), false);
+        toTest.load(Stream.of(toAdd), false);
 
-        verifyZeroInteractions(client);
+        verify(client, times(0)).updateResource(any());
     }
 
     @Test
@@ -142,13 +142,16 @@ public class LoaderEngineTest {
 
         final Journal newJournal = new Journal();
 
-        newJournal.setName("My Journal");
+        newJournal.setJournalName("My Journal");
         newJournal.getIssns().add("000-123");
         newJournal.setPmcParticipation(PmcParticipation.A);
 
         when(client.createResource(any(Journal.class))).thenReturn(URI.create("test:createSkipUpdatesTest"));
+        when(client.readResource(URI.create("test:createSkipUpdatesTest"), Journal.class)).thenReturn(newJournal);
+        when(finder.find(newJournal.getNlmta(), newJournal.getJournalName(), newJournal.getIssns())).thenReturn(null).
+                thenReturn(URI.create("test:createSkipUpdatesTest").toString());
 
-        toTest.load(asList(newJournal, newJournal).stream(), true);
+        toTest.load(Stream.of(newJournal, newJournal), true);
 
         verify(client, times(1)).createResource(eq(newJournal));
         verify(client, times(0)).updateResource(any());
