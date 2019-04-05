@@ -257,9 +257,9 @@ public class BatchJournalFinder implements JournalFinder {
 
     private static String ntripLiteral(String token) {
         final int s = token.indexOf("\"");
-        final int f = token.indexOf("\"", s + 1);
+        final int f = token.lastIndexOf("\"");//deal with journal names containing quotes
         if (s != -1 && f != -1) {
-            return token.substring(s + 1, f);
+            return token.substring(s + 1, f).replace("\\\"", "\"");//deal with journal names containing quotes
         }
 
         return null;
