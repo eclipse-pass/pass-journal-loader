@@ -7,18 +7,29 @@ Parses the PMC type A journal `.csv` file, and/or the medline database `.txt` fi
 
 ## Usage
 
-Using java sustem properties to launch the journal:
+Using java system properties to launch the journal:
 
-    java -DPMC=/path/to/pmc.csv -DMEDLINE=/path/to/medline.txt -DPASS_FEDORA_BASEURL=http://localhost:8080/fcrepo/rest/ -jar pass-journal-loader-nih-0.1.0-SNAPSHOT-exe.jar
+    java -Dpmc=/path/to/pmc.csv -Dmedline=/path/to/medline.txt -Dpass.fedore.baseurl=http://localhost:8080/fcrepo/rest/ -jar pass-journal-loader-nih-0.1.0-exe.jar
 
 ### Properties or Environment Variables
 
 The following may be provided as system properties on the command line `-Dprop-value`, or as environment variables `PROP=value`:
 
+The first four are needed by the PASS java client.
+
 `pass.fedora.url`
 BaseURL of Fedora.  Must end in trailing slash e.g. `http://localhost:8080/fcrepo/rest/`
 
-`DryRun`
+`pass.fedora.user`
+The username for the Fedora user.
+
+`pass.fedora.password`
+The Fedora user's password
+
+`pass.elasticsearch.url`
+The url for the PASS elasticsearch service.
+
+`dryRun`
 Do not add or update resources in the repository, just give statistics of resources that would be added or updated
 
 `pmc`
