@@ -18,22 +18,25 @@ package org.dataconservancy.pass.loader.journal.nih;
 
 import static java.util.stream.Stream.concat;
 
-import org.slf4j.LoggerFactory;
-
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author apb@jhu.edu
  */
 class LogUtil {
 
+    private LogUtil () {
+        //never called
+    }
+
     private static final String PREFIX = "LOG.";
 
     static void adjustLogLevels() {
         concat(System.getenv().keySet().stream(), System.getProperties().stringPropertyNames().stream())
-                .filter(key -> key.startsWith(PREFIX))
-                .forEach(LogUtil::updateLogger);
+            .filter(key -> key.startsWith(PREFIX))
+            .forEach(LogUtil::updateLogger);
     }
 
     private static void updateLogger(final String spec) {

@@ -29,7 +29,6 @@ import java.util.stream.Collectors;
 
 import org.dataconservancy.pass.model.Journal;
 import org.dataconservancy.pass.model.PmcParticipation;
-
 import org.junit.Test;
 
 /**

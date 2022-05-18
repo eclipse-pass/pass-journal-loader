@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.dataconservancy.pass.model.Journal;
-
 import org.junit.Test;
 
 /**

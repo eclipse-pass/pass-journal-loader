@@ -13,12 +13,13 @@ Using java system properties to launch the journal:
 
 ### Properties or Environment Variables
 
-The following may be provided as system properties on the command line `-Dprop-value`, or as environment variables `PROP=value`:
+The following may be provided as system properties on the command line `-Dprop-value`, or as environment
+variables `PROP=value`:
 
 The first four are needed by the PASS java client.
 
 `pass.fedora.url`
-BaseURL of Fedora.  Must end in trailing slash e.g. `http://localhost:8080/fcrepo/rest/`
+BaseURL of Fedora. Must end in trailing slash e.g. `http://localhost:8080/fcrepo/rest/`
 
 `pass.fedora.user`
 The username for the Fedora user.
@@ -33,10 +34,12 @@ The url for the PASS elasticsearch service.
 Do not add or update resources in the repository, just give statistics of resources that would be added or updated
 
 `pmc`
-Location of the PMC "type A" journal .csv file, as retrieved from [http://www.ncbi.nlm.nih.gov/pmc/front-page/NIH_PA_journal_list.csv]( http://www.ncbi.nlm.nih.gov/pmc/front-page/NIH_PA_journal_list.csv)
+Location of the PMC "type A" journal .csv file, as retrieved
+from [http://www.ncbi.nlm.nih.gov/pmc/front-page/NIH_PA_journal_list.csv]( http://www.ncbi.nlm.nih.gov/pmc/front-page/NIH_PA_journal_list.csv)
 
 `medline`
-Location of the Medline journal file, as retrieved from [ftp://ftp.ncbi.nih.gov/pubmed/J_Medline.txt](ftp://ftp.ncbi.nih.gov/pubmed/J_Medline.txt)
+Location of the Medline journal file, as retrieved
+from [ftp://ftp.ncbi.nih.gov/pubmed/J_Medline.txt](ftp://ftp.ncbi.nih.gov/pubmed/J_Medline.txt)
 
 `LOG.*`
 Adjust the logging level of a particular component, e.g. `LOG.org.dataconservancy.pass.client=WARN`

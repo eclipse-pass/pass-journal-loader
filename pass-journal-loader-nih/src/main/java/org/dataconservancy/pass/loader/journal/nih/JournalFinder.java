@@ -16,9 +16,9 @@
 
 package org.dataconservancy.pass.loader.journal.nih;
 
-import org.dataconservancy.pass.model.Journal;
-
 import java.util.List;
+
+import org.dataconservancy.pass.model.Journal;
 
 /**
  * @author apb@jhu.edu

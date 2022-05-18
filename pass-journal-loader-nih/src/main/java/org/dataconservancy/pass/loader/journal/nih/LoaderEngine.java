@@ -25,14 +25,14 @@ import java.util.stream.Stream;
 
 import org.dataconservancy.pass.client.PassClient;
 import org.dataconservancy.pass.model.Journal;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Loads journal or updates records into the repository
  * <p>
- * Uses ISSN, name and NLMTA data to correlate parsed journals with journals in the repository, updates the repository if
+ * Uses ISSN, name and NLMTA data to correlate parsed journals with journals in the repository, updates the
+ * repository if
  * pmc participation, NLMTA, or ISSNS have changed
  * </p>
  *
@@ -76,7 +76,7 @@ public class LoaderEngine implements AutoCloseable {
     void load(Stream<Journal> journals, boolean hasPmcParticipation) {
 
         journals
-                .forEach(j -> load(j, hasPmcParticipation));
+            .forEach(j -> load(j, hasPmcParticipation));
 
     }
 
@@ -113,7 +113,7 @@ public class LoaderEngine implements AutoCloseable {
 
         String found = finder.find(j.getNlmta(), j.getJournalName(), j.getIssns());
 
-        if (found == null) {//create a new journal
+        if (found == null) { //create a new journal
             try {
                 if (!dryRun) {
                     exe.execute(() -> {
@@ -133,9 +133,9 @@ public class LoaderEngine implements AutoCloseable {
                 LOG.warn("Could not load journal " + j.getJournalName(), e);
                 numError.getAndIncrement();
             }
-        } else if (found.equals("SKIP")) {//this matched something that was already processed
+        } else if (found.equals("SKIP")) { //this matched something that was already processed
             numDup.getAndIncrement();
-            LOG.info("We have already processed this journal, skipping: {}" ,j.getJournalName());
+            LOG.info("We have already processed this journal, skipping: {}", j.getJournalName());
         } else { //update this journal
 
             try {
@@ -148,12 +148,13 @@ public class LoaderEngine implements AutoCloseable {
                     update = true;
                 }
 
-                if (j.getIssns() != null && (toUpdate.getIssns() == null || !toUpdate.getIssns().containsAll(j.getIssns()))) {
+                if (j.getIssns() != null && (toUpdate.getIssns() == null || !toUpdate.getIssns()
+                                                                                     .containsAll(j.getIssns()))) {
                     toUpdate.setIssns(j.getIssns());
                     update = true;
                 }
 
-               if (toUpdate.getNlmta() == null && j.getNlmta() != null) {
+                if (toUpdate.getNlmta() == null && j.getNlmta() != null) {
                     toUpdate.setNlmta(j.getNlmta());
                     update = true;
                 }

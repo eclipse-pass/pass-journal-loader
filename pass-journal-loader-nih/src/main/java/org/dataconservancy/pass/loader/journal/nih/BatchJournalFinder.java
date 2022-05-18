@@ -22,10 +22,13 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.*;
-
-import org.dataconservancy.pass.client.fedora.FedoraConfig;
-import org.dataconservancy.pass.model.Journal;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
@@ -35,11 +38,14 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.dataconservancy.pass.client.fedora.FedoraConfig;
+import org.dataconservancy.pass.model.Journal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Analyzes journals in our repository in order to match incoming journals against our existing journals
+ *
  * @author apb@jhu.edu
  */
 public class BatchJournalFinder implements JournalFinder {
@@ -79,15 +85,17 @@ public class BatchJournalFinder implements JournalFinder {
                 }
 
                 if (predicate.equals(NLMTAS)) {
-                    final String nlmta = ntripLiteral(line);//spaces inside quotes mess split up - need to operate on line
+                    final String nlmta = ntripLiteral(
+                        line);//spaces inside quotes mess split up - need to operate on line
                     if (!nlmtaMap.containsKey(nlmta)) {
-                       nlmtaMap.put(nlmta, new HashSet<>());
+                        nlmtaMap.put(nlmta, new HashSet<>());
                     }
                     nlmtaMap.get(nlmta).add(uri);
                 }
 
                 if (predicate.equals(NAMES)) {
-                    final String name = ntripLiteral(line);//spaces inside quotes mess split up - need to operate on line
+                    final String name = ntripLiteral(
+                        line);//spaces inside quotes mess split up - need to operate on line
                     if (!nameMap.containsKey(name)) {
                         nameMap.put(name, new HashSet<>());
                     }
@@ -109,7 +117,9 @@ public class BatchJournalFinder implements JournalFinder {
         final HttpGet get = new HttpGet(journalContainer);
         get.setHeader("Accept", "application/n-triples");
         get.setHeader("Prefer",
-                "return=representation; include=\"http://fedora.info/definitions/v4/repository#EmbedResources\"; omit=\"http://fedora.info/definitions/v4/repository#ServerManaged\"");
+                      "return=representation; include=\"http://fedora" +
+                      ".info/definitions/v4/repository#EmbedResources\"; omit=\"http://fedora" +
+                      ".info/definitions/v4/repository#ServerManaged\"");
 
         try (CloseableHttpResponse response = getHttpClient().execute(get)) {
             load(response.getEntity().getContent());
@@ -121,13 +131,12 @@ public class BatchJournalFinder implements JournalFinder {
     }
 
     /**
-     *
      * @param nlmta the NLMTA supplied in out incoming journal data
-     * @param name the journal name
+     * @param name  the journal name
      * @param issns the list of issns
      * @return the URI string of the matching journal if found, null if nothing is found
-     *              or a directive to SKIP processing on this journal if the matching journal
-     *              has already been processed
+     * or a directive to SKIP processing on this journal if the matching journal
+     * has already been processed
      */
     @Override
     public synchronized String find(String nlmta, String name, List<String> issns) {
@@ -140,7 +149,7 @@ public class BatchJournalFinder implements JournalFinder {
             for (String issn : issns) {
                 Set<String> issnList = getUrisByIssn(issn);
                 if (issnList != null) {
-                    for(String uri : issnList){
+                    for (String uri : issnList) {
                         Integer i = uriScores.putIfAbsent(uri, 1);
                         if (i != null) {
                             uriScores.put(uri, i + 1);
@@ -168,21 +177,20 @@ public class BatchJournalFinder implements JournalFinder {
             }
         }
 
-
-        if(uriScores.size()>0) {//we have a possible uri - find out if it is matchy enough
+        if (uriScores.size() > 0) { //we have a possible uri - find out if it is matchy enough
             Integer highScore = Collections.max(uriScores.values());
             int minimumQualifyingScore = 2;
             List<String> sortedUris = new ArrayList<>();
 
             for (int i = highScore; i >= minimumQualifyingScore; i--) {
                 for (String uri : uriScores.keySet()) {
-                    if(uriScores.get(uri) == i) {
+                    if (uriScores.get(uri) == i) {
                         sortedUris.add(uri);
                     }
                 }
             }
 
-            if (sortedUris.size() > 0 ) {// there are matching journals - decide if we have matched already
+            if (sortedUris.size() > 0) { // there are matching journals - decide if we have matched already
                 String foundUri = null;
                 for (String candidate : sortedUris) {
                     if (!foundUris.contains(candidate)) {
@@ -193,7 +201,7 @@ public class BatchJournalFinder implements JournalFinder {
                 if (foundUri != null) {
                     foundUris.add(foundUri);
                     return foundUri;
-                } else {//this journal has been processed already
+                } else { //this journal has been processed already
                     return "SKIP";
                 }
             }
@@ -201,33 +209,31 @@ public class BatchJournalFinder implements JournalFinder {
         return null;
     }
 
-
     private synchronized Set<String> getUrisByIssn(String issn) {
         if (issnMap.containsKey(issn)) {
             return issnMap.get(issn);
         }
-        
+
         String[] parts = issn.split(":");
-        
+
         if (parts.length == 2) {
             return issnMap.get(parts[1]);
         }
-        
+
         return null;
-        
+
     }
 
     private synchronized Set<String> getUrisByNlmta(String nlmta) {
-        if (nlmta != null && nlmta.length()>0 && nlmtaMap.containsKey(nlmta)) {
+        if (nlmta != null && nlmta.length() > 0 && nlmtaMap.containsKey(nlmta)) {
             return nlmtaMap.get(nlmta);
         }
 
         return null;
     }
 
-
     private synchronized Set<String> getUrisByName(String name) {
-        if (name != null && name.length()>0 &&  nameMap.containsKey(name)) {
+        if (name != null && name.length() > 0 && nameMap.containsKey(name)) {
             return nameMap.get(name);
         }
 
@@ -237,12 +243,12 @@ public class BatchJournalFinder implements JournalFinder {
     private static CloseableHttpClient getHttpClient() {
         final CredentialsProvider provider = new BasicCredentialsProvider();
         final UsernamePasswordCredentials credentials = new UsernamePasswordCredentials(FedoraConfig.getUserName(),
-                FedoraConfig.getPassword());
+                                                                                        FedoraConfig.getPassword());
         provider.setCredentials(AuthScope.ANY, credentials);
 
         return HttpClientBuilder.create()
-                .setDefaultCredentialsProvider(provider)
-                .build();
+                                .setDefaultCredentialsProvider(provider)
+                                .build();
     }
 
     private static String ntripleUri(String token) {

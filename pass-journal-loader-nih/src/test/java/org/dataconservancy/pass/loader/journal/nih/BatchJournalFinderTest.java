@@ -16,6 +16,10 @@
 
 package org.dataconservancy.pass.loader.journal.nih;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+
 import java.io.InputStream;
 import java.net.URI;
 import java.util.Arrays;
@@ -23,10 +27,7 @@ import java.util.Collections;
 
 import org.dataconservancy.pass.model.Journal;
 import org.dataconservancy.pass.model.PmcParticipation;
-
 import org.junit.Test;
-
-import static org.junit.Assert.*;
 
 /**
  * @author apb@jhu.edu
@@ -86,7 +87,7 @@ public class BatchJournalFinderTest {
     }
 
     @Test
-    public void insufficientMatchTest() throws Exception{
+    public void insufficientMatchTest() throws Exception {
         final BatchJournalFinder toTest = new BatchJournalFinder();
 
         try (final InputStream in = this.getClass().getResourceAsStream("/moreJournals.nt")) {
@@ -97,7 +98,7 @@ public class BatchJournalFinderTest {
         //only one element matches - this should return null
         final String found = toTest.find(null, null, Collections.singletonList("0000-0001"));
         assertNull(found);
-   }
+    }
 
     @Test
     public void nameAndOneIssnMatchTest() throws Exception {
@@ -128,7 +129,6 @@ public class BatchJournalFinderTest {
         assertNotNull(found);
         assertEquals(uri1, found);
     }
-
 
     @Test
     public void nlmtaAndIssnMatchTest() throws Exception {

@@ -29,7 +29,6 @@ import java.util.stream.Stream;
 import org.dataconservancy.pass.client.PassClient;
 import org.dataconservancy.pass.model.Journal;
 import org.dataconservancy.pass.model.PmcParticipation;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -71,7 +70,8 @@ public class LoaderEngineTest {
         existing.getIssns().add("000-123");
 
         when(client.readResource(eq(existing.getId()), eq(Journal.class))).thenReturn(existing);
-        when(finder.find(existing.getNlmta(), existing.getJournalName(), existing.getIssns())).thenReturn(existing.getId().toString());
+        when(finder.find(existing.getNlmta(), existing.getJournalName(), existing.getIssns())).thenReturn(
+            existing.getId().toString());
 
         //final Journal toAdd = new PMCSource();
         Journal toAdd = new Journal();
@@ -99,7 +99,8 @@ public class LoaderEngineTest {
         existing.setPmcParticipation(PmcParticipation.A);
 
         when(client.readResource(eq(existing.getId()), eq(Journal.class))).thenReturn(existing);
-        when(finder.find(existing.getNlmta(), existing.getJournalName(), existing.getIssns())).thenReturn(existing.getId().toString());
+        when(finder.find(existing.getNlmta(), existing.getJournalName(), existing.getIssns())).thenReturn(
+            existing.getId().toString());
 
         //final Journal toAdd = new PMCSource();
         final Journal toAdd = new Journal();
@@ -126,7 +127,8 @@ public class LoaderEngineTest {
         existing.setPmcParticipation(PmcParticipation.A);
 
         when(client.readResource(eq(existing.getId()), eq(Journal.class))).thenReturn(existing);
-        when(finder.find(existing.getNlmta(), existing.getJournalName(), existing.getIssns())).thenReturn(existing.getId().toString());
+        when(finder.find(existing.getNlmta(), existing.getJournalName(), existing.getIssns())).thenReturn(
+            existing.getId().toString());
 
         final Journal toAdd = new Journal();
         toAdd.setIssns(existing.getIssns());
@@ -149,7 +151,10 @@ public class LoaderEngineTest {
         when(client.createResource(any(Journal.class))).thenReturn(URI.create("test:createSkipUpdatesTest"));
         when(client.readResource(URI.create("test:createSkipUpdatesTest"), Journal.class)).thenReturn(newJournal);
         when(finder.find(newJournal.getNlmta(), newJournal.getJournalName(), newJournal.getIssns())).thenReturn(null).
-                thenReturn(URI.create("test:createSkipUpdatesTest").toString());
+                    thenReturn(
+                        URI.create(
+                               "test:createSkipUpdatesTest")
+                           .toString());
 
         toTest.load(Stream.of(newJournal, newJournal), true);
 

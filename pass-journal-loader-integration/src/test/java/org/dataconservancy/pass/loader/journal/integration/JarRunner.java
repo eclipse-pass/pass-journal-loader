@@ -43,7 +43,7 @@ class JarRunner {
     /**
      * Create a jar runner on the given jar and arguments.
      *
-     * @param jar jar file
+     * @param jar  jar file
      * @param args command line arguments, if any.
      * @return initialized jar runner.
      */
@@ -54,7 +54,7 @@ class JarRunner {
     /**
      * Set an environment variable.
      *
-     * @param key The environment variable name
+     * @param key   The environment variable name
      * @param value The value
      * @return configured JarRunner.
      */
@@ -101,7 +101,7 @@ class JarRunner {
 
             Executors.newSingleThreadExecutor().execute(() -> {
                 try (BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream(),
-                        UTF_8))) {
+                                                                                      UTF_8))) {
 
                     String line;
                     while ((line = reader.readLine()) != null) {
