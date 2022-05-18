@@ -26,11 +26,10 @@ import java.nio.charset.Charset;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-import org.dataconservancy.pass.model.Journal;
-import org.dataconservancy.pass.model.PmcParticipation;
-
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
+import org.dataconservancy.pass.model.Journal;
+import org.dataconservancy.pass.model.PmcParticipation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,8 +48,8 @@ public class NihTypeAReader implements JournalReader {
     private Stream<Journal> readJournals(Reader csv) throws IOException {
 
         return stream(CSVFormat.RFC4180.parse(csv).spliterator(), false)
-                .map(NihTypeAReader::toJournal)
-                .filter(Objects::nonNull);
+            .map(NihTypeAReader::toJournal)
+            .filter(Objects::nonNull);
     }
 
     private static Journal toJournal(final CSVRecord record) {
@@ -73,7 +72,7 @@ public class NihTypeAReader implements JournalReader {
             // 4 is start date (we don't care)
             // 5 is end date (if ended, then it's not active)
             String endDate = null;
-            if (record.size() > 5) {//csv file may lack trailing comma if this field is empty
+            if (record.size() > 5) { //csv file may lack trailing comma if this field is empty
                 endDate = record.get(5);
             }
             final boolean isActive = (endDate == null || endDate.trim().equals(""));

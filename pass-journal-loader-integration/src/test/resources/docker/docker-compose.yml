@@ -6,8 +6,8 @@ services:
     image: oapass/fcrepo:4.7.5-3.2-5
     environment:
       FCREPO_HOST: "${FCREPO_HOST}"
-      FCREPO_PORT : "${FCREPO_PORT}"
-    ports: 
+      FCREPO_PORT: "${FCREPO_PORT}"
+    ports:
       - "${FCREPO_PORT}:${FCREPO_PORT}"
     volumes:
       - "mnt/:/mnt"

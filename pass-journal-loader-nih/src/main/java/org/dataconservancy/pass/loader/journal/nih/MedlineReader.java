@@ -76,7 +76,7 @@ public class MedlineReader implements JournalReader {
                 final Journal j = new Journal();
 
                 for (String line = reader.readLine(); !(line == null || line.contains(BOUNDARY)); line = reader
-                        .readLine()) {
+                    .readLine()) {
                     if (line.startsWith(TITLE_FIELD)) {
                         j.setJournalName(extract(line));
                     } else if (line.startsWith(ISSN_FIELD)) {

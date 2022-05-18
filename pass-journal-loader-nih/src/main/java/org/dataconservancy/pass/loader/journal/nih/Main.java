@@ -24,7 +24,6 @@ import java.io.InputStream;
 
 import org.dataconservancy.pass.client.PassClientFactory;
 import org.dataconservancy.pass.client.fedora.FedoraConfig;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,6 +33,10 @@ import org.slf4j.LoggerFactory;
  * @author apb@jhu.edu
  */
 public class Main {
+
+    private Main () {
+        //never called
+    }
 
     private static final Logger LOG = LoggerFactory.getLogger(Main.class);
 

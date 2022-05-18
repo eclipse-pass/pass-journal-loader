@@ -32,12 +32,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.dataconservancy.pass.client.PassClient;
-import org.dataconservancy.pass.client.PassClientFactory;
-import org.dataconservancy.pass.client.fedora.FedoraConfig;
-import org.dataconservancy.pass.model.Journal;
-import org.dataconservancy.pass.model.PmcParticipation;
-
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
@@ -46,6 +40,11 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.dataconservancy.pass.client.PassClient;
+import org.dataconservancy.pass.client.PassClientFactory;
+import org.dataconservancy.pass.client.fedora.FedoraConfig;
+import org.dataconservancy.pass.model.Journal;
+import org.dataconservancy.pass.model.PmcParticipation;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,18 +61,18 @@ public class DepositIT {
     private Process load;
 
     private final String PASS_BASEURL = System.getProperty("pass.fedora.baseurl",
-            "http://localhost:8080/fcrepo/rest/");
+                                                           "http://localhost:8080/fcrepo/rest/");
 
     @Test
     public void loadFromFileTest() throws Exception {
 
         // First, load all three journals using medline data
         load = jar(new File(System.getProperty("nih.loader.jar")))
-                .logOutput(LoggerFactory.getLogger("nih-loader"))
-                .withEnv("MEDLINE", DepositIT.class.getResource("/medline.txt").getPath())
-                .withEnv("PASS_FEDORA_BASEURL", PASS_BASEURL)
-                .withEnv("LOG_ORG_DATACONSERVANCY_PASS", "DEBUG")
-                .start();
+            .logOutput(LoggerFactory.getLogger("nih-loader"))
+            .withEnv("MEDLINE", DepositIT.class.getResource("/medline.txt").getPath())
+            .withEnv("PASS_FEDORA_BASEURL", PASS_BASEURL)
+            .withEnv("LOG_ORG_DATACONSERVANCY_PASS", "DEBUG")
+            .start();
 
         wait(load);
 
@@ -82,11 +81,11 @@ public class DepositIT {
         assertEquals(0, typeA(listJournals()).size());
 
         load = jar(new File(System.getProperty("nih.loader.jar")))
-                .logOutput(LoggerFactory.getLogger("nih-loader"))
-                .withEnv("PMC", DepositIT.class.getResource("/pmc-1.csv").getPath())
-                .withEnv("PASS_FEDORA_BASEURL", PASS_BASEURL)
-                .withEnv("LOG_ORG_DATACONSERVANCY_PASS", "DEBUG")
-                .start();
+            .logOutput(LoggerFactory.getLogger("nih-loader"))
+            .withEnv("PMC", DepositIT.class.getResource("/pmc-1.csv").getPath())
+            .withEnv("PASS_FEDORA_BASEURL", PASS_BASEURL)
+            .withEnv("LOG_ORG_DATACONSERVANCY_PASS", "DEBUG")
+            .start();
 
         wait(load);
 
@@ -95,11 +94,11 @@ public class DepositIT {
         assertEquals(2, typeA(listJournals()).size());
 
         load = jar(new File(System.getProperty("nih.loader.jar")))
-                .logOutput(LoggerFactory.getLogger("nih-loader"))
-                .withEnv("PMC", DepositIT.class.getResource("/pmc-2.csv").getPath())
-                .withEnv("PASS_FEDORA_BASEURL", PASS_BASEURL)
-                .withEnv("LOG_ORG_DATACONSERVANCY_PASS", "DEBUG")
-                .start();
+            .logOutput(LoggerFactory.getLogger("nih-loader"))
+            .withEnv("PMC", DepositIT.class.getResource("/pmc-2.csv").getPath())
+            .withEnv("PASS_FEDORA_BASEURL", PASS_BASEURL)
+            .withEnv("LOG_ORG_DATACONSERVANCY_PASS", "DEBUG")
+            .start();
 
         wait(load);
 
@@ -110,17 +109,18 @@ public class DepositIT {
 
     private List<PmcParticipation> typeA(Collection<URI> uris) {
         return uris.stream()
-                .map(uri -> client.readResource(uri, Journal.class))
-                .map(Journal::getPmcParticipation)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+                   .map(uri -> client.readResource(uri, Journal.class))
+                   .map(Journal::getPmcParticipation)
+                   .filter(Objects::nonNull)
+                   .collect(Collectors.toList());
     }
 
     private Set<URI> listJournals() throws Exception {
         final HttpGet get = new HttpGet(PASS_BASEURL + "journals");
         get.setHeader("Accept", "application/n-triples");
         get.setHeader("Prefer",
-                "return=representation; include=\"http://www.w3.org/ns/ldp#PreferContainment\"; omit=\"http://fedora.info/definitions/v4/repository#ServerManaged\"");
+                      "return=representation; include=\"http://www.w3.org/ns/ldp#PreferContainment\"; " +
+                      "omit=\"http://fedora.info/definitions/v4/repository#ServerManaged\"");
 
         final Set<URI> URIs = new HashSet<>();
 
@@ -157,12 +157,12 @@ public class DepositIT {
     private static CloseableHttpClient getHttpClient() {
         final CredentialsProvider provider = new BasicCredentialsProvider();
         final UsernamePasswordCredentials credentials = new UsernamePasswordCredentials(FedoraConfig.getUserName(),
-                FedoraConfig.getPassword());
+                                                                                        FedoraConfig.getPassword());
         provider.setCredentials(AuthScope.ANY, credentials);
 
         return HttpClientBuilder.create()
-                .setDefaultCredentialsProvider(provider)
-                .build();
+                                .setDefaultCredentialsProvider(provider)
+                                .build();
     }
 
 }
