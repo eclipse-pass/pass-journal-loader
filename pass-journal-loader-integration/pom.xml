@@ -2,7 +2,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>org.dataconservancy.pass</groupId>
+    <groupId>org.eclipse.pass</groupId>
     <artifactId>pass-journal-loader</artifactId>
     <version>0.1.1-SNAPSHOT</version>
   </parent>
@@ -63,7 +63,7 @@
         </executions>
         <configuration>
           <systemPropertyVariables>
-            <nih.loader.jar>${org.dataconservancy.pass:pass-journal-loader-nih:jar:exe}</nih.loader.jar>
+            <nih.loader.jar>${org.eclipse.pass:pass-journal-loader-nih:jar:exe}</nih.loader.jar>
             <pass.fedora.baseurl>http://${FCREPO_HOST}:${FCREPO_PORT}/fcrepo/rest/</pass.fedora.baseurl>
           </systemPropertyVariables>
           <!--    <classpathDependencyScopeExclude>runtime</classpathDependencyScopeExclude>
@@ -144,7 +144,7 @@
   <dependencies>
 
     <dependency>
-      <groupId>org.dataconservancy.pass</groupId>
+      <groupId>org.eclipse.pass</groupId>
       <artifactId>pass-journal-loader-nih</artifactId>
       <version>${project.version}</version>
       <classifier>exe</classifier>
