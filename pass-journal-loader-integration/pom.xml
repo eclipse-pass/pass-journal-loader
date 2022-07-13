@@ -1,33 +1,41 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
+
   <parent>
     <groupId>org.eclipse.pass</groupId>
     <artifactId>pass-journal-loader</artifactId>
     <version>0.1.0-SNAPSHOT</version>
   </parent>
+
   <artifactId>pass-journal-loader-integration</artifactId>
 
   <properties>
     <FCREPO_HOST>localhost</FCREPO_HOST>
   </properties>
 
-  <profiles>
-    <profile>
-      <id>standard</id>
-      <properties>
-        <FCREPO_PORT>8080</FCREPO_PORT>
-        <FCREPO_JMX_PORT>1099</FCREPO_JMX_PORT>
-      </properties>
-    </profile>
-    <profile>
-      <id>local-context</id>
-      <properties>
-        <!-- Uses the local context at src/test/resources/docker/mnt/context.jsonld -->
-        <COMPACTION_PRELOAD_FILE_PASS_STATIC>/mnt/context.jsonld</COMPACTION_PRELOAD_FILE_PASS_STATIC>
-      </properties>
-    </profile>
-  </profiles>
+  <dependencies>
+
+    <dependency>
+      <groupId>org.eclipse.pass</groupId>
+      <artifactId>pass-journal-loader-nih</artifactId>
+      <version>${project.version}</version>
+      <classifier>exe</classifier>
+    </dependency>
+
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+  </dependencies>
 
   <build>
     <plugins>
@@ -141,27 +149,20 @@
     </plugins>
   </build>
 
-  <dependencies>
-
-    <dependency>
-      <groupId>org.eclipse.pass</groupId>
-      <artifactId>pass-journal-loader-nih</artifactId>
-      <version>${project.version}</version>
-      <classifier>exe</classifier>
-    </dependency>
-
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-classic</artifactId>
-      <scope>test</scope>
-    </dependency>
-
-  </dependencies>
-
+  <profiles>
+    <profile>
+      <id>standard</id>
+      <properties>
+        <FCREPO_PORT>8080</FCREPO_PORT>
+        <FCREPO_JMX_PORT>1099</FCREPO_JMX_PORT>
+      </properties>
+    </profile>
+    <profile>
+      <id>local-context</id>
+      <properties>
+        <!-- Uses the local context at src/test/resources/docker/mnt/context.jsonld -->
+        <COMPACTION_PRELOAD_FILE_PASS_STATIC>/mnt/context.jsonld</COMPACTION_PRELOAD_FILE_PASS_STATIC>
+      </properties>
+    </profile>
+  </profiles>
 </project>
